@@ -13,7 +13,11 @@ public:
 
 protected:
     virtual void onRead(const char *buf, size_t len) override {
-        std::cout << buf << std::endl;
+        std::string str(buf, len);
+        std::cout << str << std::endl;
+        std::string tmp = "OK!";
+        tmp += str;
+        send(tmp.data(), tmp.length());
     }
     virtual void onWrite() override {
     }

@@ -34,3 +34,17 @@ void ServerSocket::acceptHandle(std::shared_ptr<Session> &session, const boost::
         session->close(error.what());
     }
 }
+
+void ServerSocket::send(const std::string &ip, const char *msg, int len) {
+    std::shared_ptr<Session> session;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto it = sessions_.find(ip);
+        if (it != sessions_.end()) {
+            session = sessions_[ip];
+        }
+    }
+    if (session.get()) {
+        session->send(msg, len);
+    }
+}

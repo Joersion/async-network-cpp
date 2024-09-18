@@ -23,7 +23,7 @@ protected:
         std::cout << "对端已连接,ip: " << ip() << ",port:" << port() << std::endl;
     }
     virtual void onClose(const std::string &error) override {
-        std::cout << "对端已断开,ip: " << ip() << ",port:" << port() << std::endl;
+        std::cout << "error info:" << error;
     }
     virtual void onTimer() override {
         send(gContent.data(), gContent.length());
@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
         gContent = argv[1];
     }
     auto t = std::thread([&]() {
-        ClientSocket client("127.0.0.1", 4137, std::make_unique<testClientFactory>(), 5);
+        ClientSocket client("127.0.0.1", 4137, std::make_unique<testClientFactory>(), 50);
         client.start();
     });
     t.join();

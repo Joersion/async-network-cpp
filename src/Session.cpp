@@ -30,11 +30,13 @@ void Session::readHandle(const boost::system::error_code &error, size_t len) {
         syncRecv();
     } else {
         close(error.what());
-        std::cout << "handle read failed, error is " << error.what() << std::endl;
     }
 }
 
 void Session::send(const char *msg, size_t len) {
+    if (isClose_) {
+        return;
+    }
     std::string data;
     {
         std::lock_guard<std::mutex> lock(sendLock_);
@@ -72,7 +74,6 @@ void Session::writeHandle(const boost::system::error_code &error, size_t len) {
         syncSend(data);
     } else {
         close(error.what());
-        std::cout << "handle write failed, error is " << error.what() << std::endl;
     }
 }
 
@@ -88,13 +89,16 @@ void Session::close(const std::string &error) {
 
     timeout_ = 0;
     timer_.cancel();
+
+    std::lock_guard<std::mutex> lock(sendLock_);
+    sendBuf_ = std::move(std::queue<std::string>());
 }
 
 void Session::startTimer() {
     if (timeout_ == 0 || isClose_) {
         return;
     }
-    timer_.expires_from_now(boost::posix_time::seconds(timeout_));
+    timer_.expires_from_now(boost::posix_time::milliseconds(timeout_));
     timer_.async_wait(std::bind(&Session::timerHandle, shared_from_this()));
 }
 

@@ -13,10 +13,11 @@ public:
     ServerSocket(int port, std::unique_ptr<SessionFactory> factory, int timeout = 0);
     ~ServerSocket() = default;
     void start();
+    void send(const std::string& ip, const char* msg, int len);
 
 private:
     void accept();
-    void acceptHandle(std::shared_ptr<Session> &session, const boost::system::error_code &error);
+    void acceptHandle(std::shared_ptr<Session>& session, const boost::system::error_code& error);
 
 private:
     boost::asio::io_context ioContext_;
