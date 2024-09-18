@@ -1,21 +1,21 @@
 #include "ServerSocket.h"
 
 ServerSocket::ServerSocket(int port, std::unique_ptr<SessionFactory> factory, int timeout)
-    : ioContext(),
-      acceptor_(ioContext, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
+    : ioContext_(),
+      acceptor_(ioContext_, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
       factory_(std::move(factory)),
       timeout_(timeout) {
 }
 
 void ServerSocket::start() {
     accept();
-    ioContext.run();
+    ioContext_.run();
 }
 
 void ServerSocket::accept() {
-    auto session = factory_->create(ioContext, timeout_);
+    auto session = factory_->create(ioContext_, timeout_);
     session->installCloseCb([this](const std::string &ip) {
-        std::lock_guard<std::mutex> lock();
+        std::lock_guard<std::mutex> lock(mutex_);
         sessions_.erase(ip);
     });
     acceptor_.async_accept(session->socket(),
@@ -26,7 +26,7 @@ void ServerSocket::acceptHandle(std::shared_ptr<Session> &session, const boost::
     if (!error) {
         session->start();
         {
-            std::lock_guard<std::mutex> lock();
+            std::lock_guard<std::mutex> lock(mutex_);
             sessions_[session->ip()] = std::move(session);
         }
         accept();

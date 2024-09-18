@@ -22,6 +22,9 @@ protected:
         std::cout << "对端已连接,ip: " << ip() << ",port:" << port() << std::endl;
     }
     virtual void onClose(const std::string &error) override {
+        std::cout << "对端已连接,ip: " << ip() << ",port:" << port() << std::endl;
+    }
+    virtual void onTimer() override {
     }
 };
 

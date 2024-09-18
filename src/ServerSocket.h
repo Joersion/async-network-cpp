@@ -19,7 +19,7 @@ private:
     void acceptHandle(std::shared_ptr<Session> &session, const boost::system::error_code &error);
 
 private:
-    boost::asio::io_context ioContext;
+    boost::asio::io_context ioContext_;
     boost::asio::ip::tcp::acceptor acceptor_;
     std::map<std::string, std::shared_ptr<Session>> sessions_;
     std::unique_ptr<SessionFactory> factory_;
