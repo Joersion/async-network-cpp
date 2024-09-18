@@ -4,17 +4,16 @@
 #include "src/Session.h"
 #include "src/SessionFactory.h"
 
-class testSession : public Session {
+class testServer : public Session {
 public:
-    testSession(boost::asio::io_context &ioContext, int timeout) : Session(ioContext, timeout) {
+    testServer(boost::asio::io_context &ioContext, int timeout) : Session(ioContext, timeout) {
     }
-    ~testSession() {
+    ~testServer() {
     }
 
 protected:
     virtual void onRead(const char *buf, size_t len) override {
         std::cout << buf << std::endl;
-        send(buf, len);
     }
     virtual void onWrite() override {
     }
@@ -22,26 +21,26 @@ protected:
         std::cout << "对端已连接,ip: " << ip() << ",port:" << port() << std::endl;
     }
     virtual void onClose(const std::string &error) override {
-        std::cout << "对端已连接,ip: " << ip() << ",port:" << port() << std::endl;
+        std::cout << "对端已断开,ip: " << ip() << ",port:" << port() << std::endl;
     }
     virtual void onTimer() override {
     }
 };
 
-class testSessionFactory : public SessionFactory {
+class testServerFactory : public SessionFactory {
 public:
-    testSessionFactory() = default;
-    ~testSessionFactory() = default;
+    testServerFactory() = default;
+    ~testServerFactory() = default;
     virtual std::shared_ptr<Session> create(boost::asio::io_context &ioContext, int timeout = 0) {
-        return std::make_shared<testSession>(ioContext, timeout);
+        return std::make_shared<testServer>(ioContext, timeout);
     }
 };
 
 int main() {
-    ServerSocket server(4137, std::make_unique<testSessionFactory>());
-    server.start();
-    while (1) {
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-    }
+    auto t = std::thread([&]() {
+        ServerSocket server(4137, std::make_unique<testServerFactory>());
+        server.start();
+    });
+    t.join();
     return 0;
 }

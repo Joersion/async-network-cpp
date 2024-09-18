@@ -4,7 +4,10 @@ project(AsioSocket)
 ADD_DEFINITIONS(
 -O3 
 )
+
+#高版本防止告警
 cmake_policy(SET CMP0144 NEW)
+
 #指定编译器
 set(CMAKE_C_COMPILER "aarch64-rockchip1031-linux-gnu-gcc")
 set(CMAKE_CXX_COMPILER "aarch64-rockchip1031-linux-gnu-g++")
@@ -17,22 +20,42 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 # 设置 Boost 的路径
 set(BOOST_ROOT /home/joersion/work/boost/aarch64)
 
+#优先静态库
+set(Boost_USE_STATIC_LIBS ON)
+
 # 查找 Boost 库的组件
 find_package(Boost REQUIRED COMPONENTS system thread)
 
 # 添加可执行文件和源文件
-file(GLOB SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
+file(GLOB SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/ServerTest.cpp)
 
-add_executable(AsioSocket ${SOURCES})
+add_executable(serverTest ${SOURCES})
 
 # 包含头文件路径（包括其他目录）
-target_include_directories(AsioSocket 
+target_include_directories(serverTest 
     PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}/src/
 )
 
 # 包含 Boost 头文件路径
-target_include_directories(AsioSocket PRIVATE ${Boost_INCLUDE_DIRS})
+target_include_directories(serverTest PRIVATE ${Boost_INCLUDE_DIRS})
 
 # 链接 Boost 库
-target_link_libraries(AsioSocket PRIVATE pthread ${Boost_LIBRARIES})
+target_link_libraries(serverTest PRIVATE pthread ${Boost_LIBRARIES})
+#------------------------------------------------------------------------------------------------------------
+# 添加可执行文件和源文件
+file(GLOB SOURCES2 ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/ClientTest.cpp)
+
+add_executable(clientTest ${SOURCES2})
+
+# 包含头文件路径（包括其他目录）
+target_include_directories(clientTest 
+    PRIVATE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/
+)
+
+# 包含 Boost 头文件路径
+target_include_directories(clientTest PRIVATE ${Boost_INCLUDE_DIRS})
+
+# 链接 Boost 库
+target_link_libraries(clientTest PRIVATE pthread ${Boost_LIBRARIES})

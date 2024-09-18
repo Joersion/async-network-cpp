@@ -31,6 +31,6 @@ void ServerSocket::acceptHandle(std::shared_ptr<Session> &session, const boost::
         }
         accept();
     } else {
-        std::cout << "handle acceptHandle failed, error is " << error.what() << std::endl;
+        session->close(error.what());
     }
 }

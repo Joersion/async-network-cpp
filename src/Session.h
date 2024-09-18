@@ -25,8 +25,10 @@ public:
     }
 
     void start();
+    void start(boost::asio::ip::tcp::resolver::results_type endpoints);
     void send(const char *msg, size_t len);
 
+    void close(const std::string &error);
     void installCloseCb(std::function<void(const std::string &)> func) {
         closeCb_ = func;
     }
@@ -45,7 +47,8 @@ private:
     void syncSend(const std::string &msg);
     void writeHandle(const boost::system::error_code &error, size_t len);
 
-    void close(const std::string &error);
+    void syncConnect(boost::asio::ip::tcp::resolver::results_type endpoints);
+    void ConnectHandle(const boost::system::error_code &error, const boost::asio::ip::tcp::endpoint &endpoint);
 
     void startTimer();
     void timerHandle();

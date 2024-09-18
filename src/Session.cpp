@@ -10,6 +10,10 @@ void Session::start() {
     startTimer();
 }
 
+void Session::start(boost::asio::ip::tcp::resolver::results_type endpoints) {
+    syncConnect(endpoints);
+}
+
 void Session::syncRecv() {
     ::memset(recvBuf_, 0, BUFFER_MAX_LEN);
     socket_.async_read_some(boost::asio::buffer(recvBuf_, BUFFER_MAX_LEN),
@@ -90,7 +94,7 @@ void Session::startTimer() {
     if (timeout_ == 0 || isClose_) {
         return;
     }
-    timer_.expires_from_now(boost::posix_time::milliseconds(timeout_));
+    timer_.expires_from_now(boost::posix_time::seconds(timeout_));
     timer_.async_wait(std::bind(&Session::timerHandle, shared_from_this()));
 }
 
@@ -100,4 +104,18 @@ void Session::timerHandle() {
     }
     onTimer();
     startTimer();
+}
+
+void Session::syncConnect(boost::asio::ip::tcp::resolver::results_type endpoints) {
+    boost::asio::async_connect(socket_, endpoints,
+                               std::bind(&Session::ConnectHandle, shared_from_this(), std::placeholders::_1,
+                                         std::placeholders::_2));
+}
+
+void Session::ConnectHandle(const boost::system::error_code &error, const boost::asio::ip::tcp::endpoint &endpoint) {
+    if (!error) {
+        start();
+    } else {
+        close(error.what());
+    }
 }
