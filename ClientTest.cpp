@@ -44,8 +44,9 @@ int main(int argc, char *argv[]) {
         gContent = argv[1];
     }
     auto t = std::thread([&]() {
-        ClientSocket client("127.0.0.1", 4137, std::make_unique<testClientFactory>(), 50);
-        client.start();
+        std::shared_ptr<ClientSocket> cli =
+            std::make_shared<ClientSocket>("127.0.0.1", 4137, std::make_unique<testClientFactory>(), 5000);
+        cli->start();
     });
     t.join();
     return 0;

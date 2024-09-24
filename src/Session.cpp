@@ -60,7 +60,6 @@ void Session::writeHandle(const boost::system::error_code &error, size_t len) {
         if (isClose_) {
             return;
         }
-        onWrite();
         std::string data;
         {
             std::lock_guard<std::mutex> lock(sendLock_);
@@ -71,6 +70,7 @@ void Session::writeHandle(const boost::system::error_code &error, size_t len) {
                 return;
             }
         }
+        onWrite(data);
         syncSend(data);
     } else {
         close(error.what());

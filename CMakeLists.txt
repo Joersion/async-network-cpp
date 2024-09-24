@@ -14,8 +14,8 @@ set(CMAKE_CXX_COMPILER "aarch64-rockchip1031-linux-gnu-g++")
 
 # 设置 C++ 标准
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -g -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g -Wall")
 
 # 设置 Boost 的路径
 set(BOOST_ROOT ~/work/boost/aarch64)

@@ -22,7 +22,7 @@ void ServerSocket::accept() {
                            std::bind(&ServerSocket::acceptHandle, this, session, std::placeholders::_1));
 }
 
-void ServerSocket::acceptHandle(std::shared_ptr<Session> &session, const boost::system::error_code &error) {
+void ServerSocket::acceptHandle(std::shared_ptr<Session> session, const boost::system::error_code &error) {
     if (!error) {
         session->start();
         {

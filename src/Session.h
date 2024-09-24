@@ -35,7 +35,7 @@ public:
 
 protected:
     virtual void onRead(const char *buf, size_t len) = 0;
-    virtual void onWrite() = 0;
+    virtual void onWrite(std::string &msg) = 0;
     virtual void onConnect() = 0;
     virtual void onClose(const std::string &error) = 0;
     virtual void onTimer() = 0;
@@ -60,6 +60,6 @@ private:
     std::mutex sendLock_;
     bool isClose_;
     std::function<void(const std::string &)> closeCb_;
-    boost::asio::deadline_timer timer_;
     int timeout_;
+    boost::asio::deadline_timer timer_;
 };

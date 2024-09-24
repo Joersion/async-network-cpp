@@ -17,7 +17,7 @@ public:
 
 private:
     void accept();
-    void acceptHandle(std::shared_ptr<Session>& session, const boost::system::error_code& error);
+    void acceptHandle(std::shared_ptr<Session> session, const boost::system::error_code& error);
 
 private:
     boost::asio::io_context ioContext_;
