@@ -88,16 +88,19 @@ private:
     std::string requestMsg_;
     HttpClient* cli_;
 };
-
-// void HttpClientSession::GET() {
-//     impl_->Get();
-// }
-// void HttpClientSession::POST(const string& data) {
-//     impl_->Post(data);
-// }
-// void HttpClientSession::UPDATE(const string& msg) {
-//     impl_->Update("");
-// }
-// void HttpClientSession::DELETE(const string& msg) {
-//     impl_->Delete("");
-// }
+void HttpClient::onRead(const std::string& ip, int port, const char* buf, size_t len) {
+    std::cout << buf << std::endl;
+    std::string msg(buf, len);
+    impl_->doResponse(msg);
+}
+void HttpClient::onWrite(const std::string& ip, int port, string& msg) {
+}
+void HttpClient::onConnect(const std::string& ip, int port) {
+    std::cout << "连接建立成功,ip: " << ip << ",port:" << port << std::endl;
+    impl_->doRequest();
+}
+void HttpClient::onClose(const std::string& ip, int port, const string& error) {
+    std::cout << "error info:" << error << std::endl;
+}
+void HttpClient::onTimer(const std::string& ip, int port) {
+}

@@ -10,14 +10,7 @@ public:
     ~ServerSocket() {
     }
     void start();
-    void send(const std::string& ip, const char* msg, int len);
-
-protected:
-    virtual void onRead(const char* buf, size_t len) = 0;
-    virtual void onWrite(std::string& msg) = 0;
-    virtual void onConnect() = 0;
-    virtual void onClose(const std::string& error) = 0;
-    virtual void onTimer() = 0;
+    void send(const std::string& ip, const std::string& msg);
 
 private:
     void accept();

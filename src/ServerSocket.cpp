@@ -34,7 +34,7 @@ void ServerSocket::acceptHandle(std::shared_ptr<Session> session, const boost::s
     }
 }
 
-void ServerSocket::send(const std::string &ip, const char *msg, int len) {
+void ServerSocket::send(const std::string &ip, const std::string &msg) {
     std::shared_ptr<Session> session;
     {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -44,7 +44,7 @@ void ServerSocket::send(const std::string &ip, const char *msg, int len) {
         }
     }
     if (session.get()) {
-        session->send(msg, len);
+        session->send(msg.data(), msg.length());
     }
 }
 

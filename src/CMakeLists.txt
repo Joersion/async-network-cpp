@@ -5,16 +5,13 @@ ADD_DEFINITIONS(
 -O3 
 )
 
-#高版本防止告警
-cmake_policy(SET CMP0144 NEW)
-
 # 设置 C++ 标准
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
 # 设置 Boost 的路径
-set(BOOST_ROOT ~/work/boost/x86)
+set(BOOST_ROOT ~/work/boost)
 
 #优先静态库
 set(Boost_USE_STATIC_LIBS ON)
