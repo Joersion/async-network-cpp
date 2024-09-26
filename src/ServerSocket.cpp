@@ -1,9 +1,8 @@
 #include "ServerSocket.h"
 
-ServerSocket::ServerSocket(int port, std::unique_ptr<SessionFactory> factory, int timeout)
+ServerSocket::ServerSocket(int port, int timeout)
     : ioContext_(),
       acceptor_(ioContext_, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
-      factory_(std::move(factory)),
       timeout_(timeout) {
 }
 
@@ -13,22 +12,22 @@ void ServerSocket::start() {
 }
 
 void ServerSocket::accept() {
-    auto session = factory_->create(ioContext_, timeout_);
+    std::shared_ptr<Session> session = std::make_shared<Session>(this, ioContext_, timeout_);
+    if (!session.get()) {
+        return;
+    }
     session->installCloseCb([this](const std::string &ip) {
         std::lock_guard<std::mutex> lock(mutex_);
         sessions_.erase(ip);
     });
-    acceptor_.async_accept(session->socket(),
-                           std::bind(&ServerSocket::acceptHandle, this, session, std::placeholders::_1));
+    auto socket = session->getSocket();
+    acceptor_.async_accept(*socket, std::bind(&ServerSocket::acceptHandle, this, session, std::placeholders::_1));
 }
 
 void ServerSocket::acceptHandle(std::shared_ptr<Session> session, const boost::system::error_code &error) {
     if (!error) {
+        addSession(session);
         session->start();
-        {
-            std::lock_guard<std::mutex> lock(mutex_);
-            sessions_[session->ip()] = std::move(session);
-        }
         accept();
     } else {
         session->close(error.what());
@@ -47,4 +46,14 @@ void ServerSocket::send(const std::string &ip, const char *msg, int len) {
     if (session.get()) {
         session->send(msg, len);
     }
+}
+
+void ServerSocket::addSession(std::shared_ptr<Session> session) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    sessions_[session->ip()] = session;
+}
+
+void ServerSocket::delSession(const std::string &ip) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    sessions_.erase(ip);
 }

@@ -1,24 +1,49 @@
 #include "Session.h"
-Session::Session(boost::asio::io_context &ioContext, int timeout)
-    : socket_(ioContext), timeout_(timeout), timer_(ioContext, boost::posix_time::microseconds(timeout)) {
+Session::Session(Connection *conn, boost::asio::io_context &ioContext, int timeout)
+    : conn_(conn),
+      socket_(std::make_shared<boost::asio::ip::tcp::socket>(ioContext)),
+      timeout_(timeout),
+      timer_(ioContext, boost::posix_time::microseconds(timeout)) {
+}
+
+std::shared_ptr<boost::asio::ip::tcp::socket> Session::getSocket() {
+    return socket_;
+}
+
+std::string Session::ip() {
+    if (!socket_ || !socket_->is_open()) {
+        return "";
+    }
+    try {
+        return socket_->remote_endpoint().address().to_string();
+    } catch (const boost::system::system_error &e) {
+        return "";
+    }
+}
+
+int Session::port() {
+    if (!socket_ || !socket_->is_open()) {
+        return 0;
+    }
+    try {
+        return socket_->remote_endpoint().port();
+    } catch (const boost::system::system_error &e) {
+        return 0;
+    }
 }
 
 void Session::start() {
     isClose_ = false;
-    onConnect();
+    conn_->onConnect(ip(), port());
     syncRecv();
     startTimer();
 }
 
-void Session::start(boost::asio::ip::tcp::resolver::results_type endpoints) {
-    syncConnect(endpoints);
-}
-
 void Session::syncRecv() {
     ::memset(recvBuf_, 0, BUFFER_MAX_LEN);
-    socket_.async_read_some(boost::asio::buffer(recvBuf_, BUFFER_MAX_LEN),
-                            std::bind(&Session::readHandle, shared_from_this(), std::placeholders::_1,
-                                      std::placeholders::_2));
+    socket_->async_read_some(boost::asio::buffer(recvBuf_, BUFFER_MAX_LEN),
+                             std::bind(&Session::readHandle, shared_from_this(), std::placeholders::_1,
+                                       std::placeholders::_2));
 }
 
 void Session::readHandle(const boost::system::error_code &error, size_t len) {
@@ -26,7 +51,7 @@ void Session::readHandle(const boost::system::error_code &error, size_t len) {
         if (isClose_) {
             return;
         }
-        onRead(recvBuf_, len);
+        conn_->onRead(ip(), port(), recvBuf_, len);
         syncRecv();
     } else {
         close(error.what());
@@ -50,7 +75,7 @@ void Session::send(const char *msg, size_t len) {
 }
 
 void Session::syncSend(const std::string &msg) {
-    boost::asio::async_write(socket_, boost::asio::buffer(msg.data(), msg.size()),
+    boost::asio::async_write(*socket_, boost::asio::buffer(msg.data(), msg.size()),
                              std::bind(&Session::writeHandle, shared_from_this(), std::placeholders::_1,
                                        std::placeholders::_2));
 }
@@ -70,7 +95,7 @@ void Session::writeHandle(const boost::system::error_code &error, size_t len) {
                 return;
             }
         }
-        onWrite(data);
+        conn_->onWrite(ip(), port(), data);
         syncSend(data);
     } else {
         close(error.what());
@@ -79,14 +104,15 @@ void Session::writeHandle(const boost::system::error_code &error, size_t len) {
 
 void Session::close(const std::string &error) {
     isClose_ = true;
-    onClose(error);
+    conn_->onClose(ip(), port(), error);
     if (closeCb_) {
         closeCb_(ip());
     }
-
-    boost::system::error_code ignored_ec;
-    socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
-
+    if (socket_->is_open()) {
+        boost::system::error_code ignored_ec;
+        socket_->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
+        socket_->close(ignored_ec);
+    }
     timeout_ = 0;
     timer_.cancel();
 
@@ -106,20 +132,6 @@ void Session::timerHandle() {
     if (timeout_ == 0 || isClose_) {
         return;
     }
-    onTimer();
+    conn_->onTimer(ip(), port());
     startTimer();
-}
-
-void Session::syncConnect(boost::asio::ip::tcp::resolver::results_type endpoints) {
-    boost::asio::async_connect(socket_, endpoints,
-                               std::bind(&Session::ConnectHandle, shared_from_this(), std::placeholders::_1,
-                                         std::placeholders::_2));
-}
-
-void Session::ConnectHandle(const boost::system::error_code &error, const boost::asio::ip::tcp::endpoint &endpoint) {
-    if (!error) {
-        start();
-    } else {
-        close(error.what());
-    }
 }

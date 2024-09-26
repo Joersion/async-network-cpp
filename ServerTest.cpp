@@ -19,7 +19,7 @@ protected:
         tmp += str;
         send(tmp.data(), tmp.length());
     }
-    virtual void onWrite() override {
+    virtual void onWrite(std::string &msg) override {
     }
     virtual void onConnect() override {
         std::cout << "对端已连接,ip: " << ip() << ",port:" << port() << std::endl;

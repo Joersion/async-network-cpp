@@ -2,62 +2,62 @@
 
 class HttpClientImpl {
 public:
-    HttpClientImpl(HttpClientSession* session) : session_(session) {
+    HttpClientImpl(HttpClient* cli, HttpClient::OPTIONS opt, const std::string& msg)
+        : cli_(cli), opt_(opt), requestMsg_(msg) {
     }
     ~HttpClientImpl() = default;
 
 private:
-    friend class HttpClientSession;
-
-    enum OPTIONS { GET, POST, UPDATE, DELETE };
+    friend class HttpClient;
 
     struct Packet {
-        static void get_request() {
+        HttpClient::OPTIONS opt;
+        void get_request(const string& msg, string& data) {
         }
-        static void post_request() {
+        void post_request() {
         }
-        static void update_request() {
+        void update_request() {
         }
-        static void delete_request() {
+        void delete_request() {
         }
-        static void get_respon() {
+        void get_respon() {
         }
-        static void post_respon() {
+        void post_respon() {
         }
-        static void update_respon() {
+        void update_respon() {
         }
-        static void delete_respon() {
+        void delete_respon() {
         }
-        static void pack(const string& msg, OPTIONS opt, string& data) {
+        void pack(const string& msg, string& data) {
             switch (opt) {
-            case GET:
-                get_request();
+            case HttpClient::OPTIONS::GET:
+                get_request(msg, data);
                 break;
-            case POST:
+            case HttpClient::OPTIONS::POST:
                 post_request();
                 break;
-            case UPDATE:
+            case HttpClient::OPTIONS::UPDATE:
                 update_request();
                 break;
-            case DELETE:
+            case HttpClient::OPTIONS::DELETE:
                 delete_request();
                 break;
             default:
                 break;
             }
         }
-        static void unpack(const string& msg, OPTIONS opt, char* data, int len) {
+        void unpack(const string& msg, char* data, int len) {
             switch (opt) {
-            case GET:
-                get_request();
+            case HttpClient::OPTIONS::GET:
+                // get_request();
                 break;
-            case POST:
+            case HttpClient::OPTIONS::POST:
                 post_request();
                 break;
-            case UPDATE:
+            case HttpClient::OPTIONS::UPDATE:
                 update_request();
                 break;
-            case DELETE:
+            case HttpClient::OPTIONS::DELETE:
                 delete_request();
                 break;
             default:
@@ -67,43 +67,37 @@ private:
     };
 
 public:
-    void Post(const string& msg) {
+    void doRequest() {
         string data;
-        Packet::pack(msg, GET, data);
-        session_->send(data.data(), data.size());
+        Packet pack;
+        pack.opt = opt_;
+        pack.pack(requestMsg_, data);
+        cli_->send(data);
     }
 
-    void Get() {
-        string data;
-        Packet::pack("", POST, data);
-        session_->send(data.data(), data.size());
-    }
-
-    void Update(const string& msg) {
-        string data;
-        Packet::pack(msg, UPDATE, data);
-        session_->send(data.data(), data.size());
-    }
-
-    void Delete(const string& msg) {
-        string data;
-        Packet::pack(msg, DELETE, data);
-        session_->send(data.data(), data.size());
+    void doResponse(const std::string& msg) {
+        string resp;
+        Packet pack;
+        pack.opt = opt_;
+        pack.pack(msg, resp);
+        cli_->onResponse(resp);
     }
 
 private:
-    HttpClientSession* session_;
+    HttpClient::OPTIONS opt_;
+    std::string requestMsg_;
+    HttpClient* cli_;
 };
 
-void HttpClientSession::GET() {
-    impl_->Get();
-}
-void HttpClientSession::POST(const string& data) {
-    impl_->Post(data);
-}
-void HttpClientSession::UPDATE(const string& msg) {
-    impl_->Update("");
-}
-void HttpClientSession::DELETE(const string& msg) {
-    impl_->Delete("");
-}
+// void HttpClientSession::GET() {
+//     impl_->Get();
+// }
+// void HttpClientSession::POST(const string& data) {
+//     impl_->Post(data);
+// }
+// void HttpClientSession::UPDATE(const string& msg) {
+//     impl_->Update("");
+// }
+// void HttpClientSession::DELETE(const string& msg) {
+//     impl_->Delete("");
+// }

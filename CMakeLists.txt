@@ -8,17 +8,13 @@ ADD_DEFINITIONS(
 #高版本防止告警
 cmake_policy(SET CMP0144 NEW)
 
-#指定编译器
-set(CMAKE_C_COMPILER "aarch64-rockchip1031-linux-gnu-gcc")
-set(CMAKE_CXX_COMPILER "aarch64-rockchip1031-linux-gnu-g++")
-
 # 设置 C++ 标准
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -g -Wall")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g -Wall")
 
 # 设置 Boost 的路径
-set(BOOST_ROOT ~/work/boost/aarch64)
+set(BOOST_ROOT ~/work/boost/x86)
 
 #优先静态库
 set(Boost_USE_STATIC_LIBS ON)
