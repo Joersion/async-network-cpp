@@ -13,11 +13,13 @@ public:
     }
 
 public:
-    virtual void onRead(const std::string &ip, int port, const char *buf, size_t len) = 0;
-    virtual void onWrite(const std::string &ip, int port, std::string &msg) = 0;
-    virtual void onConnect(const std::string &ip, int port) = 0;
+    virtual void onRead(const std::string &ip, int port, const char *buf, size_t len, const std::string &error) = 0;
+    virtual void onWrite(const std::string &ip, int port, const std::string &msg, const std::string &error) = 0;
+    virtual void onConnect(const std::string &ip, int port, const std::string &error) = 0;
     virtual void onClose(const std::string &ip, int port, const std::string &error) = 0;
     virtual void onTimer(const std::string &ip, int port) = 0;
+    // 用于父类
+    virtual void doClose(const std::string &ip, int port, const std::string &error) = 0;
 };
 
 class Session : public std::enable_shared_from_this<Session> {
@@ -32,11 +34,7 @@ public:
     int port();
     void start();
     void send(const char *msg, size_t len);
-
-    void close(const std::string &error);
-    void installCloseCb(std::function<void(const std::string &)> func) {
-        closeCb_ = func;
-    }
+    void close();
 
 private:
     void syncRecv();
@@ -55,7 +53,6 @@ private:
     std::queue<std::string> sendBuf_;
     std::mutex sendLock_;
     bool isClose_;
-    std::function<void(const std::string &)> closeCb_;
     int timeout_;
     boost::asio::deadline_timer timer_;
 };

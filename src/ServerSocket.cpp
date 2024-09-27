@@ -11,27 +11,33 @@ void ServerSocket::start() {
     ioContext_.run();
 }
 
+void ServerSocket::doClose(const std::string &ip, int port, const std::string &error) {
+    delSession(ip);
+    onClose(ip, port, error);
+}
+
 void ServerSocket::accept() {
     std::shared_ptr<Session> session = std::make_shared<Session>(this, ioContext_, timeout_);
     if (!session.get()) {
         return;
     }
-    session->installCloseCb([this](const std::string &ip) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        sessions_.erase(ip);
-    });
     auto socket = session->getSocket();
     acceptor_.async_accept(*socket, std::bind(&ServerSocket::acceptHandle, this, session, std::placeholders::_1));
 }
 
 void ServerSocket::acceptHandle(std::shared_ptr<Session> session, const boost::system::error_code &error) {
+    std::string ip = session->ip();
+    int port = session->port();
+    std::string err;
     if (!error) {
         addSession(session);
         session->start();
         accept();
     } else {
-        session->close(error.what());
+        err = error.what();
+        session->close();
     }
+    onConnect(ip, port, err);
 }
 
 void ServerSocket::send(const std::string &ip, const std::string &msg) {

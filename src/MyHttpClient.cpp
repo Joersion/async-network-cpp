@@ -88,19 +88,29 @@ private:
     std::string requestMsg_;
     MyHttpClient* cli_;
 };
-void MyHttpClient::onRead(const std::string& ip, int port, const char* buf, size_t len) {
+void MyHttpClient::onRead(const std::string& ip, int port, const char* buf, size_t len, const std::string& error) {
+    if (!error.empty()) {
+        return;
+    }
     std::cout << buf << std::endl;
     std::string msg(buf, len);
     impl_->doResponse(msg);
 }
-void MyHttpClient::onWrite(const std::string& ip, int port, string& msg) {
+void MyHttpClient::onWrite(const std::string& ip, int port, const string& msg, const std::string& error) {
+    if (!error.empty()) {
+        return;
+    }
 }
-void MyHttpClient::onConnect(const std::string& ip, int port) {
-    std::cout << "连接建立成功,ip: " << ip << ",port:" << port << std::endl;
+void MyHttpClient::onConnect(const std::string& ip, int port, const std::string& error) {
+    if (!error.empty()) {
+        return;
+    }
     impl_->doRequest();
 }
 void MyHttpClient::onClose(const std::string& ip, int port, const string& error) {
-    std::cout << "error info:" << error << std::endl;
+    if (!error.empty()) {
+        return;
+    }
 }
 void MyHttpClient::onTimer(const std::string& ip, int port) {
 }

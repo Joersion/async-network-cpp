@@ -8,9 +8,8 @@ ClientSocket::ClientSocket(const std::string& ip, int port, int timeout)
       reconnectTimer_(ioContext_) {
 }
 
-void ClientSocket::start(std::function<void(const std::string&)> errorFunc, int reconncetTime) {
+void ClientSocket::start(int reconncetTime) {
     reconnectTimeout_ = reconncetTime;
-    errorCb_ = errorFunc;
     resolver();
     ioContext_.run();
 }
@@ -28,14 +27,22 @@ void ClientSocket::resolver() {
 
 void ClientSocket::resolverHandle(const boost::system::error_code& error,
                                   boost::asio::ip::tcp::resolver::results_type endpoints) {
+    std::string err;
     if (!error) {
         syncConnect(endpoints);
     } else {
-        if (errorCb_) {
-            errorCb_(error.what());
-        }
         startTimer();
     }
+    onResolver(err);
+}
+
+void ClientSocket::doClose(const std::string& ip, int port, const std::string& error) {
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        session_.reset();
+    }
+    startTimer();
+    onClose(ip, port, error);
 }
 
 void ClientSocket::syncConnect(boost::asio::ip::tcp::resolver::results_type endpoints) {
@@ -43,13 +50,6 @@ void ClientSocket::syncConnect(boost::asio::ip::tcp::resolver::results_type endp
     if (!session.get()) {
         return;
     }
-    session->installCloseCb([this](const std::string& ip) {
-        {
-            std::lock_guard<std::mutex> lock(mutex_);
-            session_.reset();
-        }
-        startTimer();
-    });
     auto socket = session->getSocket();
     boost::asio::async_connect(*socket, endpoints,
                                std::bind(&ClientSocket::ConnectHandle, this, session, std::placeholders::_1,
@@ -58,6 +58,9 @@ void ClientSocket::syncConnect(boost::asio::ip::tcp::resolver::results_type endp
 
 void ClientSocket::ConnectHandle(std::shared_ptr<Session> session, const boost::system::error_code& error,
                                  const boost::asio::ip::tcp::endpoint& endpoint) {
+    std::string ip = session->ip();
+    int port = session->port();
+    std::string err;
     if (!error) {
         {
             std::lock_guard<std::mutex> lock(mutex_);
@@ -65,8 +68,10 @@ void ClientSocket::ConnectHandle(std::shared_ptr<Session> session, const boost::
         }
         session->start();
     } else {
-        session->close(error.what());
+        err = error.what();
+        session->close();
     }
+    onConnect(ip, port, err);
 }
 
 void ClientSocket::startTimer() {

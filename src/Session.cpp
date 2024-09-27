@@ -34,7 +34,6 @@ int Session::port() {
 
 void Session::start() {
     isClose_ = false;
-    conn_->onConnect(ip(), port());
     syncRecv();
     startTimer();
 }
@@ -47,15 +46,17 @@ void Session::syncRecv() {
 }
 
 void Session::readHandle(const boost::system::error_code &error, size_t len) {
+    std::string err;
     if (!error) {
         if (isClose_) {
             return;
         }
-        conn_->onRead(ip(), port(), recvBuf_, len);
         syncRecv();
     } else {
-        close(error.what());
+        err = error.what();
+        close();
     }
+    conn_->onRead(ip(), port(), recvBuf_, len, err);
 }
 
 void Session::send(const char *msg, size_t len) {
@@ -81,37 +82,43 @@ void Session::syncSend(const std::string &msg) {
 }
 
 void Session::writeHandle(const boost::system::error_code &error, size_t len) {
+    std::string data, err;
     if (!error) {
         if (isClose_) {
             return;
         }
-        std::string data;
         {
             std::lock_guard<std::mutex> lock(sendLock_);
             if (sendBuf_.size() > 0) {
                 data = sendBuf_.front();
                 sendBuf_.pop();
+                if (data.length() > len) {
+                    err = std::string("[error]too length data, max len is:" + std::to_string(len));
+                }
             } else {
+                err = "[error]sendBuf is no data";
                 return;
             }
         }
-        conn_->onWrite(ip(), port(), data);
         syncSend(data);
     } else {
-        close(error.what());
+        err = error.what();
+        close();
     }
+    conn_->onWrite(ip(), port(), data, err);
 }
 
-void Session::close(const std::string &error) {
+void Session::close() {
     isClose_ = true;
-    conn_->onClose(ip(), port(), error);
-    if (closeCb_) {
-        closeCb_(ip());
-    }
     if (socket_->is_open()) {
         boost::system::error_code ignored_ec;
         socket_->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
         socket_->close(ignored_ec);
+        std::string errStr;
+        if (ignored_ec) {
+            errStr = ignored_ec.what();
+        }
+        conn_->doClose(ip(), port(), errStr);
     }
     timeout_ = 0;
     timer_.cancel();

@@ -11,6 +11,8 @@ public:
     }
     void start();
     void send(const std::string& ip, const std::string& msg);
+    // 重写关闭方法，防止子类继续重写
+    virtual void doClose(const std::string& ip, int port, const std::string& error) override final;
 
 private:
     void accept();

@@ -7,8 +7,13 @@ public:
     ClientSocket(const std::string& ip, int port, int timeout = 0);
     ~ClientSocket() {
     }
-    void start(std::function<void(const std::string&)> errorFunc, int reconncetTime = 0);
+    void start(int reconncetTime = 0);
     void send(const std::string& data);
+
+public:
+    virtual void onResolver(const std::string& error) = 0;
+    // 重写关闭方法，防止子类继续重写
+    virtual void doClose(const std::string& ip, int port, const std::string& error) override final;
 
 private:
     void resolver();
@@ -30,5 +35,4 @@ private:
     std::shared_ptr<Session> session_;
     std::mutex mutex_;
     int reconnectTimeout_;
-    std::function<void(const std::string&)> errorCb_;
 };
