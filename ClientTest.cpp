@@ -1,13 +1,13 @@
 #include <iostream>
 
-#include "src/ClientSocket.h"
+#include "src/ClientConnection.h"
 #include "src/Session.h"
 
 std::string gContent = "hello!";
 
-class testClient : public ClientSocket {
+class testClient : public ClientConnection {
 public:
-    testClient(const std::string &ip, int port, int timeout = 0) : ClientSocket(ip, port, timeout) {
+    testClient(const std::string &ip, int port, int timeout = 0) : ClientConnection(ip, port, timeout) {
     }
     ~testClient() {
     }

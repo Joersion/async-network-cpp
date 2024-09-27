@@ -1,13 +1,13 @@
-#include "ClientSocket.h"
+#include "ClientConnection.h"
 
 using std::string;
 class MyHttpClientImpl;
 
-class MyHttpClient : public ClientSocket {
+class MyHttpClient : public ClientConnection {
 public:
     enum OPTIONS { GET, POST, UPDATE, DELETE };
     MyHttpClient(const std::string &ip, int port, OPTIONS opt, const std::string &msg)
-        : ClientSocket(ip, port, 1), impl_(std::make_unique<MyHttpClientImpl>(this, opt, msg)) {
+        : ClientConnection(ip, port, 1), impl_(std::make_unique<MyHttpClientImpl>(this, opt, msg)) {
         //    start()
     }
     ~MyHttpClient() {

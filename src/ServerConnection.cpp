@@ -1,31 +1,31 @@
-#include "ServerSocket.h"
+#include "ServerConnection.h"
 
-ServerSocket::ServerSocket(int port, int timeout)
+ServerConnection::ServerConnection(int port, int timeout)
     : ioContext_(),
       acceptor_(ioContext_, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
       timeout_(timeout) {
 }
 
-void ServerSocket::start() {
+void ServerConnection::start() {
     accept();
     ioContext_.run();
 }
 
-void ServerSocket::doClose(const std::string &ip, int port, const std::string &error) {
+void ServerConnection::doClose(const std::string &ip, int port, const std::string &error) {
     delSession(ip);
     onClose(ip, port, error);
 }
 
-void ServerSocket::accept() {
+void ServerConnection::accept() {
     std::shared_ptr<Session> session = std::make_shared<Session>(this, ioContext_, timeout_);
     if (!session.get()) {
         return;
     }
     auto socket = session->getSocket();
-    acceptor_.async_accept(*socket, std::bind(&ServerSocket::acceptHandle, this, session, std::placeholders::_1));
+    acceptor_.async_accept(*socket, std::bind(&ServerConnection::acceptHandle, this, session, std::placeholders::_1));
 }
 
-void ServerSocket::acceptHandle(std::shared_ptr<Session> session, const boost::system::error_code &error) {
+void ServerConnection::acceptHandle(std::shared_ptr<Session> session, const boost::system::error_code &error) {
     std::string ip = session->ip();
     int port = session->port();
     std::string err;
@@ -40,7 +40,7 @@ void ServerSocket::acceptHandle(std::shared_ptr<Session> session, const boost::s
     onConnect(ip, port, err);
 }
 
-void ServerSocket::send(const std::string &ip, const std::string &msg) {
+void ServerConnection::send(const std::string &ip, const std::string &msg) {
     std::shared_ptr<Session> session;
     {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -54,12 +54,12 @@ void ServerSocket::send(const std::string &ip, const std::string &msg) {
     }
 }
 
-void ServerSocket::addSession(std::shared_ptr<Session> session) {
+void ServerConnection::addSession(std::shared_ptr<Session> session) {
     std::lock_guard<std::mutex> lock(mutex_);
     sessions_[session->ip()] = session;
 }
 
-void ServerSocket::delSession(const std::string &ip) {
+void ServerConnection::delSession(const std::string &ip) {
     std::lock_guard<std::mutex> lock(mutex_);
     sessions_.erase(ip);
 }

@@ -2,10 +2,10 @@
 
 #include "Session.h"
 
-class ClientSocket : public Connection {
+class ClientConnection : public Connection {
 public:
-    ClientSocket(const std::string& ip, int port, int timeout = 0);
-    ~ClientSocket() {
+    ClientConnection(const std::string& ip, int port, int timeout = 0);
+    ~ClientConnection() {
     }
     void start(int reconncetTime = 0);
     void send(const std::string& data);

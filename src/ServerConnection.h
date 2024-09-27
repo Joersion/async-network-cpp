@@ -4,10 +4,10 @@
 
 #include "Session.h"
 
-class ServerSocket : public Connection {
+class ServerConnection : public Connection {
 public:
-    ServerSocket(int port, int timeout = 0);
-    ~ServerSocket() {
+    ServerConnection(int port, int timeout = 0);
+    ~ServerConnection() {
     }
     void start();
     void send(const std::string& ip, const std::string& msg);

@@ -1,11 +1,11 @@
 #include <iostream>
 
-#include "src/ServerSocket.h"
+#include "src/ServerConnection.h"
 #include "src/Session.h"
 
-class testServer : public ServerSocket {
+class testServer : public ServerConnection {
 public:
-    testServer(int port, int timeout = 0) : ServerSocket(port, timeout) {
+    testServer(int port, int timeout = 0) : ServerConnection(port, timeout) {
     }
     ~testServer() {
     }
