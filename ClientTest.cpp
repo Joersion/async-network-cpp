@@ -13,8 +13,7 @@ public:
     }
 
 public:
-    virtual void onRead(const std::string &ip, int port, const char *buf, size_t len,
-                        const std::string &error) override {
+    virtual void onRead(const std::string &ip, int port, const char *buf, size_t len, const std::string &error) override {
         if (!error.empty()) {
             std::cout << "error info:" << error << std::endl;
             return;

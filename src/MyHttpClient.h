@@ -14,8 +14,7 @@ public:
     }
 
 private:
-    virtual void onRead(const std::string &ip, int port, const char *buf, size_t len,
-                        const std::string &error) override;
+    virtual void onRead(const std::string &ip, int port, const char *buf, size_t len, const std::string &error) override;
     virtual void onWrite(const std::string &ip, int port, const string &msg, const std::string &error) override;
     virtual void onConnect(const std::string &ip, int port, const std::string &error) override;
     virtual void onClose(const std::string &ip, int port, const std::string &error) override;

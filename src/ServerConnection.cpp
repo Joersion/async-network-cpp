@@ -1,9 +1,7 @@
 #include "ServerConnection.h"
 
 ServerConnection::ServerConnection(int port, int timeout)
-    : ioContext_(),
-      acceptor_(ioContext_, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
-      timeout_(timeout) {
+    : ioContext_(), acceptor_(ioContext_, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)), timeout_(timeout) {
 }
 
 void ServerConnection::start() {

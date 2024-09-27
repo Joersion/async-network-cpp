@@ -41,8 +41,7 @@ void Session::start() {
 void Session::syncRecv() {
     ::memset(recvBuf_, 0, BUFFER_MAX_LEN);
     socket_->async_read_some(boost::asio::buffer(recvBuf_, BUFFER_MAX_LEN),
-                             std::bind(&Session::readHandle, shared_from_this(), std::placeholders::_1,
-                                       std::placeholders::_2));
+                             std::bind(&Session::readHandle, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 }
 
 void Session::readHandle(const boost::system::error_code &error, size_t len) {
@@ -77,8 +76,7 @@ void Session::send(const char *msg, size_t len) {
 
 void Session::syncSend(const std::string &msg) {
     boost::asio::async_write(*socket_, boost::asio::buffer(msg.data(), msg.size()),
-                             std::bind(&Session::writeHandle, shared_from_this(), std::placeholders::_1,
-                                       std::placeholders::_2));
+                             std::bind(&Session::writeHandle, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 }
 
 void Session::writeHandle(const boost::system::error_code &error, size_t len) {

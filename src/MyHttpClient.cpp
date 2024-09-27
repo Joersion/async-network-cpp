@@ -2,8 +2,7 @@
 
 class MyHttpClientImpl {
 public:
-    MyHttpClientImpl(MyHttpClient* cli, MyHttpClient::OPTIONS opt, const std::string& msg)
-        : cli_(cli), opt_(opt), requestMsg_(msg) {
+    MyHttpClientImpl(MyHttpClient* cli, MyHttpClient::OPTIONS opt, const std::string& msg) : cli_(cli), opt_(opt), requestMsg_(msg) {
     }
     ~MyHttpClientImpl() = default;
 

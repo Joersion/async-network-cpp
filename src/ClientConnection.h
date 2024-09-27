@@ -20,8 +20,7 @@ private:
     void resolverHandle(const boost::system::error_code& error, boost::asio::ip::tcp::resolver::results_type endpoints);
 
     void syncConnect(boost::asio::ip::tcp::resolver::results_type endpoints);
-    void ConnectHandle(std::shared_ptr<Session> session, const boost::system::error_code& error,
-                       const boost::asio::ip::tcp::endpoint& endpoint);
+    void ConnectHandle(std::shared_ptr<Session> session, const boost::system::error_code& error, const boost::asio::ip::tcp::endpoint& endpoint);
 
     void startTimer();
     void timerHandle();

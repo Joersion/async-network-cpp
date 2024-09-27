@@ -1,11 +1,7 @@
 #include "ClientConnection.h"
 
 ClientConnection::ClientConnection(const std::string& ip, int port, int timeout)
-    : ioContext_(),
-      remote_(boost::asio::ip::address::from_string(ip), port),
-      resolver_(ioContext_),
-      timeout_(timeout),
-      reconnectTimer_(ioContext_) {
+    : ioContext_(), remote_(boost::asio::ip::address::from_string(ip), port), resolver_(ioContext_), timeout_(timeout), reconnectTimer_(ioContext_) {
 }
 
 void ClientConnection::start(int reconncetTime) {
@@ -21,12 +17,10 @@ void ClientConnection::send(const std::string& data) {
 }
 
 void ClientConnection::resolver() {
-    resolver_.async_resolve(remote_, std::bind(&ClientConnection::resolverHandle, this, std::placeholders::_1,
-                                               std::placeholders::_2));
+    resolver_.async_resolve(remote_, std::bind(&ClientConnection::resolverHandle, this, std::placeholders::_1, std::placeholders::_2));
 }
 
-void ClientConnection::resolverHandle(const boost::system::error_code& error,
-                                      boost::asio::ip::tcp::resolver::results_type endpoints) {
+void ClientConnection::resolverHandle(const boost::system::error_code& error, boost::asio::ip::tcp::resolver::results_type endpoints) {
     std::string err;
     if (!error) {
         syncConnect(endpoints);
@@ -52,8 +46,7 @@ void ClientConnection::syncConnect(boost::asio::ip::tcp::resolver::results_type 
     }
     auto socket = session->getSocket();
     boost::asio::async_connect(*socket, endpoints,
-                               std::bind(&ClientConnection::ConnectHandle, this, session, std::placeholders::_1,
-                                         std::placeholders::_2));
+                               std::bind(&ClientConnection::ConnectHandle, this, session, std::placeholders::_1, std::placeholders::_2));
 }
 
 void ClientConnection::ConnectHandle(std::shared_ptr<Session> session, const boost::system::error_code& error,
