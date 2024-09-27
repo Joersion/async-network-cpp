@@ -1,17 +1,17 @@
-#include "HttpClientSession.h"
+#include "MyHttpClient.h"
 
-class HttpClientImpl {
+class MyHttpClientImpl {
 public:
-    HttpClientImpl(HttpClient* cli, HttpClient::OPTIONS opt, const std::string& msg)
+    MyHttpClientImpl(MyHttpClient* cli, MyHttpClient::OPTIONS opt, const std::string& msg)
         : cli_(cli), opt_(opt), requestMsg_(msg) {
     }
-    ~HttpClientImpl() = default;
+    ~MyHttpClientImpl() = default;
 
 private:
     friend class HttpClient;
 
     struct Packet {
-        HttpClient::OPTIONS opt;
+        MyHttpClient::OPTIONS opt;
         void get_request(const string& msg, string& data) {
         }
         void post_request() {
@@ -30,16 +30,16 @@ private:
         }
         void pack(const string& msg, string& data) {
             switch (opt) {
-            case HttpClient::OPTIONS::GET:
+            case MyHttpClient::OPTIONS::GET:
                 get_request(msg, data);
                 break;
-            case HttpClient::OPTIONS::POST:
+            case MyHttpClient::OPTIONS::POST:
                 post_request();
                 break;
-            case HttpClient::OPTIONS::UPDATE:
+            case MyHttpClient::OPTIONS::UPDATE:
                 update_request();
                 break;
-            case HttpClient::OPTIONS::DELETE:
+            case MyHttpClient::OPTIONS::DELETE:
                 delete_request();
                 break;
             default:
@@ -48,16 +48,16 @@ private:
         }
         void unpack(const string& msg, char* data, int len) {
             switch (opt) {
-            case HttpClient::OPTIONS::GET:
+            case MyHttpClient::OPTIONS::GET:
                 // get_request();
                 break;
-            case HttpClient::OPTIONS::POST:
+            case MyHttpClient::OPTIONS::POST:
                 post_request();
                 break;
-            case HttpClient::OPTIONS::UPDATE:
+            case MyHttpClient::OPTIONS::UPDATE:
                 update_request();
                 break;
-            case HttpClient::OPTIONS::DELETE:
+            case MyHttpClient::OPTIONS::DELETE:
                 delete_request();
                 break;
             default:
@@ -84,23 +84,23 @@ public:
     }
 
 private:
-    HttpClient::OPTIONS opt_;
+    MyHttpClient::OPTIONS opt_;
     std::string requestMsg_;
-    HttpClient* cli_;
+    MyHttpClient* cli_;
 };
-void HttpClient::onRead(const std::string& ip, int port, const char* buf, size_t len) {
+void MyHttpClient::onRead(const std::string& ip, int port, const char* buf, size_t len) {
     std::cout << buf << std::endl;
     std::string msg(buf, len);
     impl_->doResponse(msg);
 }
-void HttpClient::onWrite(const std::string& ip, int port, string& msg) {
+void MyHttpClient::onWrite(const std::string& ip, int port, string& msg) {
 }
-void HttpClient::onConnect(const std::string& ip, int port) {
+void MyHttpClient::onConnect(const std::string& ip, int port) {
     std::cout << "连接建立成功,ip: " << ip << ",port:" << port << std::endl;
     impl_->doRequest();
 }
-void HttpClient::onClose(const std::string& ip, int port, const string& error) {
+void MyHttpClient::onClose(const std::string& ip, int port, const string& error) {
     std::cout << "error info:" << error << std::endl;
 }
-void HttpClient::onTimer(const std::string& ip, int port) {
+void MyHttpClient::onTimer(const std::string& ip, int port) {
 }

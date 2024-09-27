@@ -1,16 +1,16 @@
 #include "ClientSocket.h"
 
 using std::string;
-class HttpClientImpl;
+class MyHttpClientImpl;
 
-class HttpClient : public ClientSocket {
+class MyHttpClient : public ClientSocket {
 public:
     enum OPTIONS { GET, POST, UPDATE, DELETE };
-    HttpClient(const std::string &ip, int port, OPTIONS opt, const std::string &msg)
-        : ClientSocket(ip, port, 1), impl_(std::make_unique<HttpClientImpl>(this, opt, msg)) {
+    MyHttpClient(const std::string &ip, int port, OPTIONS opt, const std::string &msg)
+        : ClientSocket(ip, port, 1), impl_(std::make_unique<MyHttpClientImpl>(this, opt, msg)) {
         //    start()
     }
-    ~HttpClient() {
+    ~MyHttpClient() {
     }
 
 private:
@@ -24,5 +24,5 @@ public:
     virtual void onResponse(const std::string &resp) = 0;
 
 private:
-    std::unique_ptr<HttpClientImpl> impl_;
+    std::unique_ptr<MyHttpClientImpl> impl_;
 };
