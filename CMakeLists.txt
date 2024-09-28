@@ -43,3 +43,16 @@ target_include_directories(clientTest PRIVATE ${Boost_INCLUDE_DIRS} ${CMAKE_CURR
 
 # 链接 Boost 库
 target_link_libraries(clientTest PRIVATE pthread ${Boost_LIBRARIES} asio_socket)
+
+#------------------------------------------------------------------------------------------------------------
+# 添加可执行文件和源文件
+file(GLOB SOURCES3 ${CMAKE_CURRENT_SOURCE_DIR}/HttpTest.cpp)
+
+add_executable(httpTest ${SOURCES3})
+target_compile_options(httpTest PRIVATE -g)
+
+# 包含头文件路径
+target_include_directories(httpTest PRIVATE ${Boost_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/src/)
+
+# 链接 Boost 库
+target_link_libraries(httpTest PRIVATE pthread ${Boost_LIBRARIES} asio_socket)

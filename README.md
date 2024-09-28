@@ -9,9 +9,9 @@
 
 ## 说明
 
-这是一个基于boost/boost.beast库，采用c++17开发的，支持跨平台的异步网络库，具体实现功能：
+这是一个基于boost.asio/boost.beast库，采用c++17开发的，支持跨平台的异步网络库，具体实现功能：
 
-* tcp 异步客户端/服务端：基于boost::asio，抽象了读/写/连接/关闭/定时器功能，服务端抽象tcp连接管理，客户端抽象断线重连。用户层需自行封包、解包以及数据处理
+* tcp 异步客户端/服务端：基于boost.asio，抽象了读/写/连接/关闭/定时器功能，服务端抽象tcp连接管理，客户端抽象断线重连。用户层需自行封包、解包以及数据处理
 * http 异步客户端/服务端：基于boost.beast，抽象了http应用层，用户仅需关心消息递达时的数据处理，和错误处理
 
 构建工具：
@@ -41,14 +41,6 @@ cd boost_1_81_0
 ./b2 link=static cxxflags="-fPIC" install --prefix=../x86
 ```
 
-```openSSL：
-wget https://www.openssl.org/source/openssl-1.1.1t.tar.gz
-tar -xzvf openssl-1.1.1t.tar.gz
-./Configure linux-x86_64 --prefix=/home/joersion/work/openSSL/x86
-make
-make install
-```
-
 
 交叉编译(以aarch64为例)：
 
@@ -67,20 +59,6 @@ if ! gcc in [ feature.values <toolset> ]
 }
 ./b2 link=static cxxflags="-fPIC" install --prefix=../aarch64
 ```
-
-```openSSL：
-wget https://www.openssl.org/source/openssl-1.1.1t.tar.gz
-tar -xzvf openssl-1.1.1t.tar.gz
-./Configure linux-aarch64 --cross-compile-prefix=aarch64-rockchip1031-linux-gnu- --prefix=/home/joersion/work/openSSL/aarch64
-make
-make install
-```
-
-### boost安装：
-
-
-### boost.beast安装：
-
 ## 简单示例
 
 ```tcp client
@@ -99,10 +77,9 @@ public:
     }
 
 public:
-    virtual void onRead(const std::string &ip, int port, const char *buf, size_t len,
-                        const std::string &error) override {
+    virtual void onRead(const std::string &ip, int port, const char *buf, size_t len, const std::string &error) override {
         if (!error.empty()) {
-            std::cout << "error info:" << error << std::endl;
+            std::cout << "onRead error:" << error << std::endl;
             return;
         }
         std::cout << buf << std::endl;
@@ -110,14 +87,14 @@ public:
 
     virtual void onWrite(const std::string &ip, int port, const std::string &msg, const std::string &error) override {
         if (!error.empty()) {
-            std::cout << "error info:" << error << std::endl;
+            std::cout << "onWrite error:" << error << std::endl;
             return;
         }
     }
 
     virtual void onConnect(const std::string &ip, int port, const std::string &error) override {
         if (!error.empty()) {
-            std::cout << "error info:" << error << std::endl;
+            std::cout << "onConnect error:" << error << std::endl;
             return;
         }
         std::cout << "对端已连接,ip: " << ip << ",port:" << port << std::endl;
@@ -125,10 +102,9 @@ public:
 
     virtual void onClose(const std::string &ip, int port, const std::string &error) override {
         if (!error.empty()) {
-            std::cout << "error info:" << error << std::endl;
+            std::cout << "onClose error:" << error << std::endl;
             return;
         }
-        std::cout << "error info:" << error << std::endl;
     }
 
     virtual void onTimer(const std::string &ip, int port) override {
@@ -137,7 +113,7 @@ public:
 
     virtual void onResolver(const std::string &error) override {
         if (!error.empty()) {
-            std::cout << "error info:" << error << std::endl;
+            std::cout << "onResolver error:" << error << std::endl;
             return;
         }
     }
@@ -147,11 +123,9 @@ int main(int argc, char *argv[]) {
     if (argc >= 2) {
         gContent = argv[1];
     }
-    auto t = std::thread([&]() {
-        testClient cli("127.0.0.1", 4137, 5000);
-        cli.start(5000);
-    });
-    t.join();
+    testClient cli("127.0.0.1", 4137, 5000);
+    cli.start(5000);
+    getchar();
     return 0;
 }
 ```
@@ -170,10 +144,9 @@ public:
     }
 
 public:
-    virtual void onRead(const std::string &ip, int port, const char *buf, size_t len,
-                        const std::string &error) override {
+    virtual void onRead(const std::string &ip, int port, const char *buf, size_t len, const std::string &error) override {
         if (!error.empty()) {
-            std::cout << "error info:" << error << std::endl;
+            std::cout << "onRead error info:" << error << std::endl;
             return;
         }
         std::string str(buf, len);
@@ -185,14 +158,14 @@ public:
 
     virtual void onWrite(const std::string &ip, int port, const std::string &msg, const std::string &error) override {
         if (!error.empty()) {
-            std::cout << "error info:" << error << std::endl;
+            std::cout << "onWrite error info:" << error << std::endl;
             return;
         }
     }
 
     virtual void onConnect(const std::string &ip, int port, const std::string &error) override {
         if (!error.empty()) {
-            std::cout << "error info:" << error << std::endl;
+            std::cout << "onConnect error info:" << error << std::endl;
             return;
         }
         std::cout << "对端已连接,ip: " << ip << ",port:" << port << std::endl;
@@ -200,7 +173,7 @@ public:
 
     virtual void onClose(const std::string &ip, int port, const std::string &error) override {
         if (!error.empty()) {
-            std::cout << "error info:" << error << std::endl;
+            std::cout << "onClose error info:" << error << std::endl;
             return;
         }
         std::cout << "对端已断开,ip: " << ip << ",port:" << port << std::endl;
@@ -211,12 +184,29 @@ public:
 };
 
 int main() {
-    auto t = std::thread([&]() {
-        testServer server(4137);
-        server.start();
-    });
-    t.join();
+    testServer server(4137);
+    server.start();
+    getchar();
     return 0;
+}
+```
+
+```http client(GET方法)
+#include <iostream>
+
+#include "src/HttpClient.h"
+
+int main() {
+    HttpClient::GET({"www.example.com", 80, "/", "1.0", 30}, [](const std::string& err, const HttpClient::Response& resp) {
+        if (err.empty()) {
+            std::cout << "resp.code:" << resp.code << std::endl;
+            std::cout << "resp.massage:" << resp.massage << std::endl;
+            std::cout << "resp.type:" << resp.type << std::endl;
+            std::cout << "resp.version:" << resp.version << std::endl;
+            std::cout << "resp.body:" << resp.body << std::endl;
+        }
+    });
+
 }
 ```
 

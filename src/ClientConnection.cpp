@@ -1,13 +1,18 @@
 #include "ClientConnection.h"
 
+#include "ConnectionPool.h"
+
 ClientConnection::ClientConnection(const std::string& ip, int port, int timeout)
-    : ioContext_(), remote_(boost::asio::ip::address::from_string(ip), port), resolver_(ioContext_), timeout_(timeout), reconnectTimer_(ioContext_) {
+    : ioContext_(ConnectionPool::instance().getContext()),
+      remote_(boost::asio::ip::address::from_string(ip), port),
+      resolver_(ioContext_),
+      timeout_(timeout),
+      reconnectTimer_(ioContext_) {
 }
 
 void ClientConnection::start(int reconncetTime) {
     reconnectTimeout_ = reconncetTime;
     resolver();
-    ioContext_.run();
 }
 
 void ClientConnection::send(const std::string& data) {
@@ -31,12 +36,14 @@ void ClientConnection::resolverHandle(const boost::system::error_code& error, bo
 }
 
 void ClientConnection::doClose(const std::string& ip, int port, const std::string& error) {
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        session_.reset();
-    }
     startTimer();
-    onClose(ip, port, error);
+    if (!ip.empty()) {
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            session_.reset();
+        }
+        onClose(ip, port, error);
+    }
 }
 
 void ClientConnection::syncConnect(boost::asio::ip::tcp::resolver::results_type endpoints) {

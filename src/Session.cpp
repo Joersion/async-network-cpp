@@ -1,9 +1,12 @@
 #include "Session.h"
+
+#include <boost/core/ignore_unused.hpp>
+
 Session::Session(Connection *conn, boost::asio::io_context &ioContext, int timeout)
     : conn_(conn),
-      socket_(std::make_shared<boost::asio::ip::tcp::socket>(ioContext)),
+      socket_(std::make_shared<boost::asio::ip::tcp::socket>(boost::asio::make_strand(ioContext))),
       timeout_(timeout),
-      timer_(ioContext, boost::posix_time::microseconds(timeout)) {
+      timer_(boost::asio::make_strand(ioContext), boost::posix_time::microseconds(timeout)) {
 }
 
 std::shared_ptr<boost::asio::ip::tcp::socket> Session::getSocket() {
@@ -33,13 +36,12 @@ int Session::port() {
 }
 
 void Session::start() {
-    isClose_ = false;
+    isClose_.store(false);
     syncRecv();
     startTimer();
 }
 
 void Session::syncRecv() {
-    ::memset(recvBuf_, 0, BUFFER_MAX_LEN);
     socket_->async_read_some(boost::asio::buffer(recvBuf_, BUFFER_MAX_LEN),
                              std::bind(&Session::readHandle, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 }
@@ -62,14 +64,13 @@ void Session::send(const char *msg, size_t len) {
     if (isClose_) {
         return;
     }
-    std::string data;
+    std::string data(msg, len);
     {
         std::lock_guard<std::mutex> lock(sendLock_);
         if (sendBuf_.size() > 0) {
-            sendBuf_.push(msg);
+            sendBuf_.push(data);
             return;
         }
-        sendBuf_.push(msg);
     }
     syncSend(data);
 }
@@ -80,6 +81,7 @@ void Session::syncSend(const std::string &msg) {
 }
 
 void Session::writeHandle(const boost::system::error_code &error, size_t len) {
+    boost::ignore_unused(len);
     std::string data, err;
     if (!error) {
         if (isClose_) {
@@ -90,11 +92,7 @@ void Session::writeHandle(const boost::system::error_code &error, size_t len) {
             if (sendBuf_.size() > 0) {
                 data = sendBuf_.front();
                 sendBuf_.pop();
-                if (data.length() > len) {
-                    err = std::string("[error]too length data, max len is:" + std::to_string(len));
-                }
             } else {
-                err = "[error]sendBuf is no data";
                 return;
             }
         }
@@ -103,20 +101,16 @@ void Session::writeHandle(const boost::system::error_code &error, size_t len) {
         err = error.what();
         close();
     }
-    conn_->onWrite(ip(), port(), data, err);
+    conn_->onWrite(ip(), port(), len, err);
 }
 
 void Session::close() {
-    isClose_ = true;
+    conn_->doClose(ip(), port(), "");
+    isClose_.store(true);
     if (socket_->is_open()) {
         boost::system::error_code ignored_ec;
         socket_->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
         socket_->close(ignored_ec);
-        std::string errStr;
-        if (ignored_ec) {
-            errStr = ignored_ec.what();
-        }
-        conn_->doClose(ip(), port(), errStr);
     }
     timeout_ = 0;
     timer_.cancel();

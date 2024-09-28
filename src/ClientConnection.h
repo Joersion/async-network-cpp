@@ -7,10 +7,14 @@ public:
     ClientConnection(const std::string& ip, int port, int timeout = 0);
     ~ClientConnection() {
     }
+    ClientConnection(const ClientConnection& other) = delete;
+    ClientConnection& operator=(const ClientConnection& other) = delete;
+
     void start(int reconncetTime = 0);
     void send(const std::string& data);
 
 public:
+    // 域名解析之后
     virtual void onResolver(const std::string& error) = 0;
     // 重写关闭方法，防止子类继续重写
     virtual void doClose(const std::string& ip, int port, const std::string& error) override final;
@@ -26,7 +30,7 @@ private:
     void timerHandle();
 
 private:
-    boost::asio::io_context ioContext_;
+    boost::asio::io_context& ioContext_;
     boost::asio::ip::tcp::endpoint remote_;
     boost::asio::ip::tcp::resolver resolver_;
     int timeout_;

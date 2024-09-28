@@ -1,7 +1,6 @@
 #pragma once
 #include <boost/asio.hpp>
 #include <functional>
-#include <iostream>
 #include <queue>
 #define BUFFER_MAX_LEN 2048
 
@@ -13,10 +12,15 @@ public:
     }
 
 public:
+    // 读到数据之后
     virtual void onRead(const std::string &ip, int port, const char *buf, size_t len, const std::string &error) = 0;
-    virtual void onWrite(const std::string &ip, int port, const std::string &msg, const std::string &error) = 0;
+    // 数据写入之后
+    virtual void onWrite(const std::string &ip, int port, const int len, const std::string &error) = 0;
+    // 连接上之后
     virtual void onConnect(const std::string &ip, int port, const std::string &error) = 0;
+    // 连接关闭之前
     virtual void onClose(const std::string &ip, int port, const std::string &error) = 0;
+    // 定时器发生之后
     virtual void onTimer(const std::string &ip, int port) = 0;
     // 用于父类
     virtual void doClose(const std::string &ip, int port, const std::string &error) = 0;
@@ -49,10 +53,11 @@ private:
 private:
     Connection *conn_;
     std::shared_ptr<boost::asio::ip::tcp::socket> socket_;
+    //   boost::asio::strand<boost::asio::io_context::executor_type> strand_;
     char recvBuf_[BUFFER_MAX_LEN];
     std::queue<std::string> sendBuf_;
     std::mutex sendLock_;
-    bool isClose_;
+    std::atomic<bool> isClose_;
     int timeout_;
     boost::asio::deadline_timer timer_;
 };

@@ -1,17 +1,22 @@
 #include "ServerConnection.h"
 
+#include "ConnectionPool.h"
+
 ServerConnection::ServerConnection(int port, int timeout)
-    : ioContext_(), acceptor_(ioContext_, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)), timeout_(timeout) {
+    : ioContext_(ConnectionPool::instance().getContext()),
+      acceptor_(ioContext_, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
+      timeout_(timeout) {
 }
 
 void ServerConnection::start() {
     accept();
-    ioContext_.run();
 }
 
 void ServerConnection::doClose(const std::string &ip, int port, const std::string &error) {
-    delSession(ip);
-    onClose(ip, port, error);
+    if (!ip.empty()) {
+        delSession(ip);
+        onClose(ip, port, error);
+    }
 }
 
 void ServerConnection::accept() {

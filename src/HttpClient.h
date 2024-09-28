@@ -1,43 +1,54 @@
 #pragma once
+#include <functional>
+#include <memory>
+#include <string>
 
-#include <boost/asio/strand.hpp>
-#include <boost/beast/core.hpp>
-#include <boost/beast/http.hpp>
-#include <boost/beast/version.hpp>
-
+class HttpClientImpl;
 class HttpClient {
 public:
     struct RequestOpt {
+        // 域名
         std::string host;
+        // 端口
         int port;
+        // uri路径
         std::string path;
+        // http版本
         std::string version;
-        struct {
-            std::string type;
-            std::string body;
-        } content;
+        // 超时
+        int timout;
     };
 
     struct RequestCon {
+        // 请求体
         std::string body;
+        // 请求内容格式(默认:application/json)
         std::string type;
     };
 
-    HttpClient() {
-    }
+    struct Response {
+        // 状态码
+        int code;
+        // 状态信息
+        std::string massage;
+        // 版本号
+        int version;
+        // 响应内容格式
+        std::string type;
+        // 响应体
+        std::string body;
+    };
+
+public:
+    HttpClient() = default;
     virtual ~HttpClient() = default;
 
 public:
-    virtual void onError(const std::string& error) {
-    }
-    virtual void onResopne(const boost::beast::flat_buffer& buffer, const boost::beast::http::response<boost::beast::http::string_body> resp) {
-    }
+    static bool GET(const RequestOpt& opt, std::function<void(const std::string&, const Response&)> cb);
+    static bool POST(const RequestOpt& opt, const RequestCon& content, std::function<void(const std::string&, const Response&)> cb);
+    static bool PUT(const RequestOpt& opt, const RequestCon& content, std::function<void(const std::string&, const Response&)> cb);
+    static bool DELETE(const RequestOpt& opt, std::function<void(const std::string&, const Response&)> cb);
 
 public:
-    static void GET(const RequestOpt& opt);
-    static void POST(const RequestOpt& opt, const RequestCon& content);
-    static void PUT(const RequestOpt& opt, const RequestCon& content);
-    static void DELETE(const RequestOpt& opt);
-
-    static std::shared_ptr<HttpClient> create();
+    static std::shared_ptr<HttpClientImpl> create();
 };

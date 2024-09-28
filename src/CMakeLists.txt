@@ -24,6 +24,8 @@ file(GLOB SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 add_library(asio_socket ${SOURCES})
 
+target_compile_options(asio_socket PRIVATE -g)
+
 # 包含头文件路径（包括其他目录）
 target_include_directories(asio_socket PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
