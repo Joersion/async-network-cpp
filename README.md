@@ -30,9 +30,9 @@ openSSL库（boost.beast依赖）：
 * 本人采用 1.1.1
 
 ## 安装
+boost:
 
-本地编译(本人采用静态库)：
-
+* 本地编译(本人采用静态库)：
 ```boost：
 wget https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.tar.gz
 tar -xzf boost_1_81_0.tar.gz
@@ -41,9 +41,7 @@ cd boost_1_81_0
 ./b2 link=static cxxflags="-fPIC" install --prefix=../x86
 ```
 
-
-交叉编译(以aarch64为例)：
-
+* 交叉编译(以aarch64为例)：
 ```boost：
 wget https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.tar.gz
 tar -xzf boost_1_81_0.tar.gz
@@ -60,7 +58,7 @@ if ! gcc in [ feature.values <toolset> ]
 ./b2 link=static cxxflags="-fPIC" install --prefix=../aarch64
 ```
 ## 简单示例
-
+* tcp client:
 ```tcp client
 #include <iostream>
 
@@ -132,7 +130,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 ```
-
+* tcp server:
 ```tcp server
 #include <iostream>
 
@@ -195,8 +193,8 @@ int main() {
     return 0;
 }
 ```
-
-```http client(GET方法)
+* http client:
+```
 #include <iostream>
 
 #include "src/HttpClient.h"
@@ -211,7 +209,17 @@ int main() {
             std::cout << "resp.body:" << resp.body << std::endl;
         }
     });
-
+    HttpClient::POST({"jsonplaceholder.typicode.com", 80, "/posts", "1.0", 30}, {R"({"title": "foo", "body": "bar", "userId": 1})", ""},
+                     [](const std::string& err, const HttpClient::Response& resp) {
+                         if (err.empty()) {
+                             std::cout << LINES << "POST" << LINES << std::endl;
+                             std::cout << "resp.code:" << resp.code << std::endl;
+                             std::cout << "resp.massage:" << resp.massage << std::endl;
+                             std::cout << "resp.type:" << resp.type << std::endl;
+                             std::cout << "resp.version:" << resp.version << std::endl;
+                             std::cout << "resp.body:" << resp.body << std::endl;
+                         }
+                     });
 }
 ```
 
