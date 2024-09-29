@@ -1,4 +1,4 @@
-# 基于c++ + boost/boost.beast的跨平台异步网络库
+# 基于c++ 和 boost.asio/boost.beast的跨平台异步网络库
 
 ## 目录
 
