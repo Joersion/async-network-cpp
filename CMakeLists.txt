@@ -31,7 +31,7 @@ add_executable(serverTest ${SOURCES})
 target_include_directories(serverTest PRIVATE ${Boost_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
 # 链接 Boost 库
-target_link_libraries(serverTest PRIVATE pthread ${Boost_LIBRARIES} asio_socket)
+target_link_libraries(serverTest PRIVATE pthread ${Boost_LIBRARIES} async_network)
 #------------------------------------------------------------------------------------------------------------
 # 添加可执行文件和源文件
 file(GLOB SOURCES2 ${CMAKE_CURRENT_SOURCE_DIR}/ClientTest.cpp)
@@ -42,7 +42,7 @@ add_executable(clientTest ${SOURCES2})
 target_include_directories(clientTest PRIVATE ${Boost_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
 # 链接 Boost 库
-target_link_libraries(clientTest PRIVATE pthread ${Boost_LIBRARIES} asio_socket)
+target_link_libraries(clientTest PRIVATE pthread ${Boost_LIBRARIES} async_network)
 
 #------------------------------------------------------------------------------------------------------------
 # 添加可执行文件和源文件
@@ -55,4 +55,4 @@ target_compile_options(httpTest PRIVATE -g)
 target_include_directories(httpTest PRIVATE ${Boost_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
 # 链接 Boost 库
-target_link_libraries(httpTest PRIVATE pthread ${Boost_LIBRARIES} asio_socket)
+target_link_libraries(httpTest PRIVATE pthread ${Boost_LIBRARIES} async_network)

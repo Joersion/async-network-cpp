@@ -100,6 +100,7 @@ public:
                 if (resp_.find(boost::beast::http::field::content_type) != resp_.end()) {
                     respData.type = resp_.find(boost::beast::http::field::content_type)->value();
                 }
+                respData.body = resp_.body();
                 cb_("", respData);
             } else if (error != boost::asio::error::operation_aborted) {
                 cb_(error.what(), {});

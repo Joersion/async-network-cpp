@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(asio_socket)
+project(async_network)
 
 ADD_DEFINITIONS(
 -O3 
@@ -22,15 +22,15 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 # 添加可执行文件和源文件
 file(GLOB SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
-add_library(asio_socket SHARED ${SOURCES})
+add_library(async_network SHARED ${SOURCES})
 
-target_compile_options(asio_socket PRIVATE -g)
+target_compile_options(async_network PRIVATE -g)
 
 # 包含头文件路径（包括其他目录）
-target_include_directories(asio_socket PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(async_network PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 # 包含 Boost 头文件路径
-target_include_directories(asio_socket PRIVATE ${Boost_INCLUDE_DIRS})
+target_include_directories(async_network PRIVATE ${Boost_INCLUDE_DIRS})
 
 # 链接 Boost 库
-target_link_libraries(asio_socket PRIVATE pthread ${Boost_LIBRARIES})
+target_link_libraries(async_network PRIVATE pthread ${Boost_LIBRARIES})
