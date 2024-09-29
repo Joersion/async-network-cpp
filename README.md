@@ -82,14 +82,15 @@ public:
             std::cout << "onRead error:" << error << std::endl;
             return;
         }
-        std::cout << buf << std::endl;
+        std::cout << "客户端接收数据:" << buf << std::endl;
     }
 
-    virtual void onWrite(const std::string &ip, int port, const std::string &msg, const std::string &error) override {
+    virtual void onWrite(const std::string &ip, int port, int len, const std::string &error) override {
         if (!error.empty()) {
             std::cout << "onWrite error:" << error << std::endl;
             return;
         }
+        std::cout << "客户端发送数据,len:" << len << std::endl;
     }
 
     virtual void onConnect(const std::string &ip, int port, const std::string &error) override {
@@ -97,7 +98,7 @@ public:
             std::cout << "onConnect error:" << error << std::endl;
             return;
         }
-        std::cout << "对端已连接,ip: " << ip << ",port:" << port << std::endl;
+        std::cout << "已连接上服务器,ip: " << ip << ",port:" << port << std::endl;
     }
 
     virtual void onClose(const std::string &ip, int port, const std::string &error) override {
@@ -105,9 +106,11 @@ public:
             std::cout << "onClose error:" << error << std::endl;
             return;
         }
+        std::cout << "连接已断开,ip" << ip << ",port:" << port << std::endl;
     }
 
     virtual void onTimer(const std::string &ip, int port) override {
+        std::cout << "客户端发送数据,data:" << gContent << std::endl;
         this->send(gContent);
     }
 
@@ -123,8 +126,8 @@ int main(int argc, char *argv[]) {
     if (argc >= 2) {
         gContent = argv[1];
     }
-    testClient cli("127.0.0.1", 4137, 5000);
-    cli.start(5000);
+    testClient cli("127.0.0.1", 4137, 100);
+    cli.start(1000);
     getchar();
     return 0;
 }
@@ -149,18 +152,20 @@ public:
             std::cout << "onRead error info:" << error << std::endl;
             return;
         }
+        std::cout << "收到来自客户端,Ip:" << ip << ",port:" << port << ",data:" << buf << std::endl;
         std::string str(buf, len);
-        std::cout << str << std::endl;
         std::string tmp = "OK!";
         tmp += str;
+        std::cout << "发送数据给客户端,Ip:" << ip << ",port:" << port << ",data:" << tmp << std::endl;
         send(ip, tmp);
     }
 
-    virtual void onWrite(const std::string &ip, int port, const std::string &msg, const std::string &error) override {
+    virtual void onWrite(const std::string &ip, int port, int len, const std::string &error) override {
         if (!error.empty()) {
             std::cout << "onWrite error info:" << error << std::endl;
             return;
         }
+        std::cout << "发送数据长度,Ip:" << ip << ",port:" << port << ",len:" << len << std::endl;
     }
 
     virtual void onConnect(const std::string &ip, int port, const std::string &error) override {
@@ -168,7 +173,7 @@ public:
             std::cout << "onConnect error info:" << error << std::endl;
             return;
         }
-        std::cout << "对端已连接,ip: " << ip << ",port:" << port << std::endl;
+        std::cout << "新客户端连接,ip: " << ip << ",port:" << port << std::endl;
     }
 
     virtual void onClose(const std::string &ip, int port, const std::string &error) override {
@@ -176,7 +181,7 @@ public:
             std::cout << "onClose error info:" << error << std::endl;
             return;
         }
-        std::cout << "对端已断开,ip: " << ip << ",port:" << port << std::endl;
+        std::cout << "连接已关闭,ip: " << ip << ",port:" << port << std::endl;
     }
 
     virtual void onTimer(const std::string &ip, int port) override {
