@@ -1,7 +1,6 @@
 #include "ConnectionPool.h"
 
 #include <csignal>
-#include <iostream>
 
 ConnectionPool& ConnectionPool::instance() {
     static ConnectionPool ins;
@@ -9,20 +8,16 @@ ConnectionPool& ConnectionPool::instance() {
 }
 
 ConnectionPool::ConnectionPool(int threadNum)
-    : work_(std::make_unique<boost::asio::io_context::work>(io_)), signals_(ioSignal_, SIGINT, SIGTERM), isRunning_(true) {
-    std::thread t = std::thread([this]() {
-        signals_.async_wait([this](const boost::system::error_code& error, int signal_number) {
-            try {
-                if (!error) {
-                    stop();
-                }
-            } catch (...) {
+    : work_(std::make_unique<boost::asio::io_context::work>(io_)), signals_(boost::asio::make_strand(io_), SIGINT, SIGTERM), isRunning_(true) {
+    signals_.async_wait([this](const boost::system::error_code& error, int signal_number) {
+        try {
+            if (!error) {
                 stop();
             }
-        });
-        ioSignal_.run();
+        } catch (...) {
+            stop();
+        }
     });
-    t.detach();
 
     for (int i = 0; i < threadNum; i++) {
         ioContexts_.emplace_back([this]() {
@@ -35,6 +30,7 @@ ConnectionPool::ConnectionPool(int threadNum)
 }
 
 ConnectionPool::~ConnectionPool() {
+    stop();
 }
 
 void ConnectionPool::stop() {

@@ -57,7 +57,9 @@ void Session::readHandle(const boost::system::error_code &error, size_t len) {
         err = error.what();
         close();
     }
-    conn_->onRead(ip(), port(), recvBuf_, len, err);
+    if (error != boost::asio::error::operation_aborted) {
+        conn_->onRead(ip(), port(), recvBuf_, len, err);
+    }
 }
 
 void Session::send(const char *msg, size_t len) {
@@ -101,13 +103,15 @@ void Session::writeHandle(const boost::system::error_code &error, size_t len) {
         err = error.what();
         close();
     }
-    conn_->onWrite(ip(), port(), len, err);
+    if (error != boost::asio::error::operation_aborted) {
+        conn_->onWrite(ip(), port(), len, err);
+    }
 }
 
 void Session::close() {
-    conn_->doClose(ip(), port(), "");
     isClose_.store(true);
-    if (socket_->is_open()) {
+    if (socket_ && socket_->is_open()) {
+        conn_->doClose(ip(), port(), "");
         boost::system::error_code ignored_ec;
         socket_->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
         socket_->close(ignored_ec);

@@ -2,7 +2,7 @@
 #include <boost/asio.hpp>
 #include <functional>
 #include <queue>
-#define BUFFER_MAX_LEN 2048
+#define BUFFER_MAX_LEN 4096
 
 class Connection {
 public:

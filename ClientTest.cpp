@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
     if (argc >= 2) {
         gContent = argv[1];
     }
-    testClient cli("127.0.0.1", 4137, 5000);
+    testClient cli("127.0.0.1", 4137, 100);
     cli.start(1000);
     getchar();
     return 0;

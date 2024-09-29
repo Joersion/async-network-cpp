@@ -4,7 +4,7 @@
 
 ServerConnection::ServerConnection(int port, int timeout)
     : ioContext_(ConnectionPool::instance().getContext()),
-      acceptor_(ioContext_, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
+      acceptor_(boost::asio::make_strand(ioContext_), boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
       timeout_(timeout) {
 }
 
@@ -13,10 +13,8 @@ void ServerConnection::start() {
 }
 
 void ServerConnection::doClose(const std::string &ip, int port, const std::string &error) {
-    if (!ip.empty()) {
-        delSession(ip);
-        onClose(ip, port, error);
-    }
+    delSession(ip);
+    onClose(ip, port, error);
 }
 
 void ServerConnection::accept() {
@@ -40,7 +38,9 @@ void ServerConnection::acceptHandle(std::shared_ptr<Session> session, const boos
         err = error.what();
         session->close();
     }
-    onConnect(ip, port, err);
+    if (error != boost::asio::error::operation_aborted) {
+        onConnect(ip, port, err);
+    }
 }
 
 void ServerConnection::send(const std::string &ip, const std::string &msg) {

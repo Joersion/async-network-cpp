@@ -9,12 +9,11 @@
 
 class HttpClientImpl : public HttpClient, public std::enable_shared_from_this<HttpClientImpl> {
 public:
-    HttpClientImpl(boost::asio::io_context& io) : ioContext_(io), resolver_(ioContext_), stream_(ioContext_) {
+    HttpClientImpl(boost::asio::io_context& io)
+        : ioContext_(io), resolver_(boost::asio::make_strand(ioContext_)), stream_(boost::asio::make_strand(ioContext_)) {
     }
 
     ~HttpClientImpl() {
-        resolver_.cancel();
-        stream_.close();
     }
 
     HttpClientImpl(const HttpClientImpl& other) = delete;
@@ -48,7 +47,7 @@ public:
             if (!error) {
                 stream_.expires_after(std::chrono::seconds(timeout_));
                 stream_.async_connect(results, boost::beast::bind_front_handler(&HttpClientImpl::connectHandle, shared_from_this()));
-            } else {
+            } else if (error != boost::asio::error::operation_aborted) {
                 cb_(error.what(), {});
             }
         } catch (...) {
@@ -63,7 +62,7 @@ public:
             if (!error) {
                 stream_.expires_after(std::chrono::seconds(timeout_));
                 boost::beast::http::async_write(stream_, req_, boost::beast::bind_front_handler(&HttpClientImpl::writeHandle, shared_from_this()));
-            } else {
+            } else if (error != boost::asio::error::operation_aborted) {
                 cb_(error.what(), {});
             }
         } catch (...) {
@@ -80,7 +79,7 @@ public:
             if (!error) {
                 boost::beast::http::async_read(stream_, buffer_, resp_,
                                                boost::beast::bind_front_handler(&HttpClientImpl::readHandle, shared_from_this()));
-            } else {
+            } else if (error != boost::asio::error::operation_aborted) {
                 cb_(error.what(), {});
             }
         } catch (...) {
@@ -102,7 +101,7 @@ public:
                     respData.type = resp_.find(boost::beast::http::field::content_type)->value();
                 }
                 cb_("", respData);
-            } else {
+            } else if (error != boost::asio::error::operation_aborted) {
                 cb_(error.what(), {});
             }
         } catch (...) {

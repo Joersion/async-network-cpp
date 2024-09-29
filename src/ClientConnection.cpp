@@ -5,9 +5,9 @@
 ClientConnection::ClientConnection(const std::string& ip, int port, int timeout)
     : ioContext_(ConnectionPool::instance().getContext()),
       remote_(boost::asio::ip::address::from_string(ip), port),
-      resolver_(ioContext_),
+      resolver_(boost::asio::make_strand(ioContext_)),
       timeout_(timeout),
-      reconnectTimer_(ioContext_) {
+      reconnectTimer_(boost::asio::make_strand(ioContext_)) {
 }
 
 void ClientConnection::start(int reconncetTime) {
@@ -32,7 +32,9 @@ void ClientConnection::resolverHandle(const boost::system::error_code& error, bo
     } else {
         startTimer();
     }
-    onResolver(err);
+    if (error != boost::asio::error::operation_aborted) {
+        onResolver(err);
+    }
 }
 
 void ClientConnection::doClose(const std::string& ip, int port, const std::string& error) {
@@ -71,7 +73,9 @@ void ClientConnection::ConnectHandle(std::shared_ptr<Session> session, const boo
         err = error.what();
         session->close();
     }
-    onConnect(ip, port, err);
+    if (error != boost::asio::error::operation_aborted) {
+        onConnect(ip, port, err);
+    }
 }
 
 void ClientConnection::startTimer() {

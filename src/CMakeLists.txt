@@ -22,7 +22,7 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 # 添加可执行文件和源文件
 file(GLOB SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
-add_library(asio_socket ${SOURCES})
+add_library(asio_socket SHARED ${SOURCES})
 
 target_compile_options(asio_socket PRIVATE -g)
 
