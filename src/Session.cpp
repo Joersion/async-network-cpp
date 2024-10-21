@@ -52,13 +52,14 @@ void Session::readHandle(const boost::system::error_code &error, size_t len) {
         if (isClose_) {
             return;
         }
+        conn_->onRead(ip(), port(), recvBuf_, len, err);
         syncRecv();
     } else {
         err = error.what();
+        if (error != boost::asio::error::operation_aborted) {
+            conn_->onRead(ip(), port(), recvBuf_, len, err);
+        }
         close();
-    }
-    if (error != boost::asio::error::operation_aborted) {
-        conn_->onRead(ip(), port(), recvBuf_, len, err);
     }
 }
 
@@ -98,13 +99,14 @@ void Session::writeHandle(const boost::system::error_code &error, size_t len) {
                 return;
             }
         }
+        conn_->onWrite(ip(), port(), len, err);
         syncSend(data);
     } else {
         err = error.what();
+        if (error != boost::asio::error::operation_aborted) {
+            conn_->onWrite(ip(), port(), len, err);
+        }
         close();
-    }
-    if (error != boost::asio::error::operation_aborted) {
-        conn_->onWrite(ip(), port(), len, err);
     }
 }
 

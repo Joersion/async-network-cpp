@@ -33,13 +33,14 @@ void ServerConnection::acceptHandle(std::shared_ptr<Session> session, const boos
     if (!error) {
         addSession(session);
         session->start();
+        onConnect(ip, port, err);
         accept();
     } else {
         err = error.what();
+        if (error != boost::asio::error::operation_aborted) {
+            onConnect(ip, port, err);
+        }
         session->close();
-    }
-    if (error != boost::asio::error::operation_aborted) {
-        onConnect(ip, port, err);
     }
 }
 
