@@ -1,4 +1,5 @@
 #include <iostream>
+#include <thread>
 
 #include "src/ClientConnection.h"
 #include "src/Session.h"
@@ -62,8 +63,14 @@ int main(int argc, char *argv[]) {
     if (argc >= 2) {
         gContent = argv[1];
     }
-    testClient cli("127.0.0.1", 4137, 100);
+    testClient cli("127.0.0.1", 4137, 2000);
     cli.start(1000);
-    getchar();
+    while (1) {
+        char ch = getchar();
+        if (ch == 'q') {
+            exit(0);
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
     return 0;
 }

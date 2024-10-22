@@ -1,7 +1,6 @@
 #pragma once
 #include <boost/asio.hpp>
 #include <boost/asio/signal_set.hpp>
-#include <iostream>
 #include <thread>
 #include <vector>
 

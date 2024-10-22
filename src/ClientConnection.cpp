@@ -53,8 +53,7 @@ void ClientConnection::syncConnect(boost::asio::ip::tcp::resolver::results_type 
     if (!session.get()) {
         return;
     }
-    auto socket = session->getSocket();
-    boost::asio::async_connect(*socket, endpoints,
+    boost::asio::async_connect(session->getSocket(), endpoints,
                                std::bind(&ClientConnection::ConnectHandle, this, session, std::placeholders::_1, std::placeholders::_2));
 }
 

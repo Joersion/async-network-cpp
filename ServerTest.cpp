@@ -1,4 +1,5 @@
 #include <iostream>
+#include <thread>
 
 #include "src/ServerConnection.h"
 #include "src/Session.h"
@@ -55,6 +56,12 @@ public:
 int main() {
     testServer server(4137);
     server.start();
-    getchar();
+    while (1) {
+        char ch = getchar();
+        if (ch == 'q') {
+            exit(0);
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
     return 0;
 }

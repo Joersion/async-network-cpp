@@ -22,8 +22,7 @@ void ServerConnection::accept() {
     if (!session.get()) {
         return;
     }
-    auto socket = session->getSocket();
-    acceptor_.async_accept(*socket, std::bind(&ServerConnection::acceptHandle, this, session, std::placeholders::_1));
+    acceptor_.async_accept(session->getSocket(), std::bind(&ServerConnection::acceptHandle, this, session, std::placeholders::_1));
 }
 
 void ServerConnection::acceptHandle(std::shared_ptr<Session> session, const boost::system::error_code &error) {

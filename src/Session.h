@@ -33,7 +33,7 @@ public:
     }
 
 public:
-    std::shared_ptr<boost::asio::ip::tcp::socket> getSocket();
+    boost::asio::ip::tcp::socket &getSocket();
     std::string ip();
     int port();
     void start();
@@ -52,7 +52,7 @@ private:
 
 private:
     Connection *conn_;
-    std::shared_ptr<boost::asio::ip::tcp::socket> socket_;
+    boost::asio::ip::tcp::socket socket_;
     //   boost::asio::strand<boost::asio::io_context::executor_type> strand_;
     char recvBuf_[BUFFER_MAX_LEN];
     std::queue<std::string> sendBuf_;
