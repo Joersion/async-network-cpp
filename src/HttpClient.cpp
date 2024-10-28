@@ -28,6 +28,9 @@ public:
         req_.target(opt.path);
         req_.set(boost::beast::http::field::host, opt.host);
         req_.set(boost::beast::http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+        for (auto custom : opt.headers) {
+            req_.set(custom.first, custom.second);
+        }
         timeout_ = opt.timout < 5 ? 5 : opt.timout;
         if (!content.body.empty()) {
             req_.body() = content.body;

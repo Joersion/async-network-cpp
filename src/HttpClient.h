@@ -1,5 +1,6 @@
 #pragma once
 #include <functional>
+#include <map>
 #include <memory>
 #include <string>
 
@@ -17,6 +18,8 @@ public:
         std::string version;
         // 超时
         int timout;
+        // 自定义头部
+        std::map<std::string, std::string> headers;
     };
 
     struct RequestCon {
