@@ -1,12 +1,14 @@
 #include <iostream>
 #include <thread>
 
-#include "src/ServerConnection.h"
-#include "src/Session.h"
+#include "src/Socket.h"
+#include "src/TcpServer.h"
 
-class testServer : public ServerConnection {
+using namespace net::socket;
+
+class testServer : public TcpServer {
 public:
-    testServer(int port, int timeout = 0) : ServerConnection(port, timeout) {
+    testServer(int port, int timeout = 0) : TcpServer(port, timeout) {
     }
     ~testServer() {
     }

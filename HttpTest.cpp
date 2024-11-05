@@ -1,8 +1,10 @@
 #include <iostream>
 
 #include "src/HttpClient.h"
-#define LINES "----------------"
 
+using namespace net;
+
+#define LINES "----------------"
 int main() {
     HttpClient::GET({"www.example.com", 80, "/", "1.0", 30}, [](const std::string& err, const HttpClient::Response& resp) {
         if (err.empty()) {

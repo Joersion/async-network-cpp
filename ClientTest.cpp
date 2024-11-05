@@ -1,14 +1,16 @@
 #include <iostream>
 #include <thread>
 
-#include "src/ClientConnection.h"
-#include "src/Session.h"
+#include "src/Socket.h"
+#include "src/TcpClient.h"
 
 std::string gContent = "hello!";
 
-class testClient : public ClientConnection {
+using namespace net::socket;
+
+class testClient : public TcpClient {
 public:
-    testClient(const std::string &ip, int port, int timeout = 0) : ClientConnection(ip, port, timeout) {
+    testClient(const std::string &ip, int port, int timeout = 0) : TcpClient(ip, port, timeout) {
     }
     ~testClient() {
     }
