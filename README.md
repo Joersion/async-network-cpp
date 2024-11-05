@@ -61,15 +61,18 @@ if ! gcc in [ feature.values <toolset> ]
 * tcp client:
 ```tcp client
 #include <iostream>
+#include <thread>
 
-#include "src/ClientConnection.h"
-#include "src/Session.h"
+#include "src/Socket.h"
+#include "src/TcpClient.h"
 
 std::string gContent = "hello!";
 
-class testClient : public ClientConnection {
+using namespace net::socket;
+
+class testClient : public TcpClient {
 public:
-    testClient(const std::string &ip, int port, int timeout = 0) : ClientConnection(ip, port, timeout) {
+    testClient(const std::string &ip, int port, int timeout = 0) : TcpClient(ip, port, timeout) {
     }
     ~testClient() {
     }
@@ -124,22 +127,31 @@ int main(int argc, char *argv[]) {
     if (argc >= 2) {
         gContent = argv[1];
     }
-    testClient cli("127.0.0.1", 4137, 100);
+    testClient cli("127.0.0.1", 4137, 2000);
     cli.start(1000);
-    getchar();
+    while (1) {
+        char ch = getchar();
+        if (ch == 'q') {
+            exit(0);
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
     return 0;
 }
 ```
 * tcp server:
 ```tcp server
 #include <iostream>
+#include <thread>
 
-#include "src/ServerConnection.h"
-#include "src/Session.h"
+#include "src/Socket.h"
+#include "src/TcpServer.h"
 
-class testServer : public ServerConnection {
+using namespace net::socket;
+
+class testServer : public TcpServer {
 public:
-    testServer(int port, int timeout = 0) : ServerConnection(port, timeout) {
+    testServer(int port, int timeout = 0) : TcpServer(port, timeout) {
     }
     ~testServer() {
     }
@@ -189,7 +201,13 @@ public:
 int main() {
     testServer server(4137);
     server.start();
-    getchar();
+    while (1) {
+        char ch = getchar();
+        if (ch == 'q') {
+            exit(0);
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
     return 0;
 }
 ```
@@ -199,9 +217,13 @@ int main() {
 
 #include "src/HttpClient.h"
 
+using namespace net;
+
+#define LINES "----------------"
 int main() {
     HttpClient::GET({"www.example.com", 80, "/", "1.0", 30}, [](const std::string& err, const HttpClient::Response& resp) {
         if (err.empty()) {
+            std::cout << LINES << "GET" << LINES << std::endl;
             std::cout << "resp.code:" << resp.code << std::endl;
             std::cout << "resp.massage:" << resp.massage << std::endl;
             std::cout << "resp.type:" << resp.type << std::endl;
@@ -220,6 +242,8 @@ int main() {
                              std::cout << "resp.body:" << resp.body << std::endl;
                          }
                      });
+
+    getchar();
 }
 ```
 
