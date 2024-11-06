@@ -6,8 +6,7 @@ namespace net::socket {
     class TcpClient : public Connection {
     public:
         TcpClient(const std::string& ip, int port, int timeout = 0);
-        ~TcpClient() {
-        }
+        virtual ~TcpClient();
         TcpClient(const TcpClient& other) = delete;
         TcpClient& operator=(const TcpClient& other) = delete;
 
@@ -39,5 +38,6 @@ namespace net::socket {
         std::shared_ptr<Session> session_;
         std::mutex mutex_;
         int reconnectTimeout_;
+        bool stop_;
     };
 };  // namespace net::socket

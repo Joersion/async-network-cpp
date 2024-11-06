@@ -1,8 +1,7 @@
 #pragma once
-#include <boost/asio.hpp>
-#include <functional>
-#include <queue>
-#define BUFFER_MAX_LEN 4096
+#include "IO.h"
+
+using namespace io;
 
 namespace net::socket {
     class Connection {
@@ -27,7 +26,7 @@ namespace net::socket {
         virtual void doClose(const std::string &ip, int port, const std::string &error) = 0;
     };
 
-    class Session : public std::enable_shared_from_this<Session> {
+    class Session : public SessionBase {
     public:
         Session(Connection *conn, boost::asio::io_context &ioContext, int timeout = 0);
         ~Session() {
@@ -37,28 +36,17 @@ namespace net::socket {
         boost::asio::ip::tcp::socket &getSocket();
         std::string ip();
         int port();
-        void start();
-        void send(const char *msg, size_t len);
-        void close();
 
-    private:
-        void syncRecv();
-        void readHandle(const boost::system::error_code &error, size_t len);
-
-        void syncSend(const std::string &msg);
-        void writeHandle(const boost::system::error_code &error, size_t len);
-
-        void startTimer();
-        void timerHandle();
+    protected:
+        virtual void syncRecv(char *buf, int len, std::function<void(const boost::system::error_code &error, size_t len)> cb) override;
+        virtual void syncSend(const std::string &msg, std::function<void(const boost::system::error_code &error, size_t len)> cb) override;
+        virtual void closeSession() override;
+        virtual void readHandle(const char *buf, size_t len, const std::string &error) override;
+        virtual void writeHandle(const int len, const std::string &error) override;
+        virtual void timerHandle() override;
 
     private:
         Connection *conn_;
         boost::asio::ip::tcp::socket socket_;
-        char recvBuf_[BUFFER_MAX_LEN];
-        std::queue<std::string> sendBuf_;
-        std::mutex sendLock_;
-        std::atomic<bool> isClose_;
-        int timeout_;
-        boost::asio::deadline_timer timer_;
     };
 };  // namespace net::socket

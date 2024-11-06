@@ -6,7 +6,22 @@ namespace net::socket {
     TcpServer::TcpServer(int port, int timeout)
         : ioContext_(net::ConnectionPool::instance().getContext()),
           acceptor_(boost::asio::make_strand(ioContext_), boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
-          timeout_(timeout) {
+          timeout_(timeout),
+          stop_(false) {
+    }
+
+    TcpServer::~TcpServer() {
+        stop_ = true;
+        std::vector<std::shared_ptr<Session>> tmps;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            for (auto session : sessions_) {
+                tmps.emplace_back(session.second);
+            }
+        }
+        for (auto session : tmps) {
+            session->close();
+        }
     }
 
     void TcpServer::start() {
@@ -14,8 +29,10 @@ namespace net::socket {
     }
 
     void TcpServer::doClose(const std::string &ip, int port, const std::string &error) {
+        if (!stop_) {
+            onClose(ip, port, error);
+        }
         delSession(ip);
-        onClose(ip, port, error);
     }
 
     void TcpServer::accept() {

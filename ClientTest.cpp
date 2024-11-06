@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
         gContent = argv[1];
     }
     testClient cli("127.0.0.1", 4137, 2000);
-    cli.start(1000);
+    cli.start(500);
     while (1) {
         char ch = getchar();
         if (ch == 'q') {

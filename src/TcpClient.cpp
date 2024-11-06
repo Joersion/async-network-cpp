@@ -8,7 +8,15 @@ namespace net::socket {
           remote_(boost::asio::ip::address::from_string(ip), port),
           resolver_(boost::asio::make_strand(ioContext_)),
           timeout_(timeout),
-          reconnectTimer_(boost::asio::make_strand(ioContext_)) {
+          reconnectTimer_(boost::asio::make_strand(ioContext_)),
+          stop_(false) {
+    }
+
+    TcpClient::~TcpClient() {
+        stop_ = true;
+        if (session_.get()) {
+            session_->close();
+        }
     }
 
     void TcpClient::start(int reconncetTime) {
@@ -39,14 +47,15 @@ namespace net::socket {
     }
 
     void TcpClient::doClose(const std::string& ip, int port, const std::string& error) {
-        startTimer();
-        if (!ip.empty()) {
-            {
-                std::lock_guard<std::mutex> lock(mutex_);
-                session_.reset();
-            }
+        if (!stop_) {
+            startTimer();
+        }
+        if (!stop_ && !ip.empty()) {
             onClose(ip, port, error);
         }
+
+        std::lock_guard<std::mutex> lock(mutex_);
+        session_.reset();
     }
 
     void TcpClient::syncConnect(boost::asio::ip::tcp::resolver::results_type endpoints) {
@@ -87,6 +96,7 @@ namespace net::socket {
     }
 
     void TcpClient::timerHandle() {
+        std::cout << "timerHandle" << std::endl;
         resolver();
     }
 

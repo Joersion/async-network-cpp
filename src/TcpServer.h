@@ -8,7 +8,7 @@ namespace net::socket {
     class TcpServer : public Connection {
     public:
         TcpServer(int port, int timeout = 0);
-        ~TcpServer() = default;
+        virtual ~TcpServer();
         TcpServer(const TcpServer& other) = delete;
         TcpServer& operator=(const TcpServer& other) = delete;
 
@@ -26,10 +26,10 @@ namespace net::socket {
 
     private:
         boost::asio::io_context& ioContext_;
-        // boost::asio::executor_work_guard<boost::asio::io_context::executor_type> workGuard_;
         boost::asio::ip::tcp::acceptor acceptor_;
         std::map<std::string, std::shared_ptr<Session>> sessions_;
         std::mutex mutex_;
         int timeout_;
+        bool stop_;
     };
 };  // namespace net::socket
