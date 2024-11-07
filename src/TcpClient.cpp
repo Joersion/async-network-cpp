@@ -30,6 +30,12 @@ namespace net::socket {
         }
     }
 
+    void TcpClient::close() {
+        if (session_) {
+            session_->close();
+        }
+    }
+
     void TcpClient::resolver() {
         resolver_.async_resolve(remote_, std::bind(&TcpClient::resolverHandle, this, std::placeholders::_1, std::placeholders::_2));
     }
@@ -96,7 +102,6 @@ namespace net::socket {
     }
 
     void TcpClient::timerHandle() {
-        std::cout << "timerHandle" << std::endl;
         resolver();
     }
 

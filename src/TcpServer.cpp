@@ -32,7 +32,7 @@ namespace net::socket {
         if (!stop_) {
             onClose(ip, port, error);
         }
-        delSession(ip);
+        delSession(ip, port);
     }
 
     void TcpServer::accept() {
@@ -61,13 +61,14 @@ namespace net::socket {
         }
     }
 
-    void TcpServer::send(const std::string &ip, const std::string &msg) {
+    void TcpServer::send(const std::string &ip, int port, const std::string &msg) {
+        std::string key = ipPort(ip, port);
         std::shared_ptr<Session> session;
         {
             std::lock_guard<std::mutex> lock(mutex_);
-            auto it = sessions_.find(ip);
+            auto it = sessions_.find(key);
             if (it != sessions_.end()) {
-                session = sessions_[ip];
+                session = sessions_[key];
             }
         }
         if (session.get()) {
@@ -75,14 +76,35 @@ namespace net::socket {
         }
     }
 
-    void TcpServer::addSession(std::shared_ptr<Session> session) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        sessions_[session->ip()] = session;
+    void TcpServer::close(const std::string &ip, int port) {
+        std::string key = ipPort(ip, port);
+        std::shared_ptr<Session> session;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            auto it = sessions_.find(key);
+            if (it != sessions_.end()) {
+                session = sessions_[key];
+            }
+        }
+        if (session.get()) {
+            session->close();
+        }
     }
 
-    void TcpServer::delSession(const std::string &ip) {
+    std::string TcpServer::ipPort(const std::string &ip, int port) {
+        return ip + ":" + std::to_string(port);
+    }
+
+    void TcpServer::addSession(std::shared_ptr<Session> session) {
         std::lock_guard<std::mutex> lock(mutex_);
-        sessions_.erase(ip);
+        std::string key = ipPort(session->ip(), session->port());
+        sessions_[key] = session;
+    }
+
+    void TcpServer::delSession(const std::string &ip, int port) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::string key = ipPort(ip, port);
+        sessions_.erase(key);
     }
 
 };  // namespace net::socket

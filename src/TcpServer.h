@@ -14,7 +14,9 @@ namespace net::socket {
 
     public:
         void start();
-        void send(const std::string& ip, const std::string& msg);
+        void send(const std::string& ip, int port, const std::string& msg);
+        void close(const std::string& ip, int port);
+        std::string ipPort(const std::string& ip, int port);
         // 重写关闭方法，防止子类继续重写
         virtual void doClose(const std::string& ip, int port, const std::string& error) override final;
 
@@ -22,7 +24,7 @@ namespace net::socket {
         void accept();
         void acceptHandle(std::shared_ptr<Session> session, const boost::system::error_code& error);
         void addSession(std::shared_ptr<Session> session);
-        void delSession(const std::string& ip);
+        void delSession(const std::string& ip, int port);
 
     private:
         boost::asio::io_context& ioContext_;

@@ -12,6 +12,7 @@ namespace net::socket {
 
         void start(int reconncetTime = 0);
         void send(const std::string& data);
+        void close();
 
     public:
         // 域名解析之后
