@@ -38,6 +38,7 @@ namespace net {
                 if (!content.type.empty()) {
                     req_.set(boost::beast::http::field::content_type, content.type);
                 }
+                req_.set(boost::beast::http::field::content_length, std::to_string(content.body.size()));
             }
             cb_ = cb;
 
