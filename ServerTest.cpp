@@ -24,7 +24,7 @@ public:
         std::string tmp = "OK!";
         tmp += str;
         std::cout << "发送数据给客户端,Ip:" << ip << ",port:" << port << ",data:" << tmp << std::endl;
-        send(ip, tmp);
+        send(ip, port, tmp);
     }
 
     virtual void onWrite(const std::string &ip, int port, int len, const std::string &error) override {
