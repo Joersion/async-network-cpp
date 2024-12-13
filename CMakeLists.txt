@@ -10,9 +10,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -g -Wall")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g -Wall")
 
-# set(CMAKE_CXX_COMPILER "aarch64-rockchip1031-linux-gnu-g++")
+set(CMAKE_CXX_COMPILER "aarch64-linux-g++")
 # 设置 Boost 的路径
-set(BOOST_ROOT ~/work/boost/x86)
+set(BOOST_ROOT ~/work/boost/aarch64-energy)
 
 #优先静态库
 set(Boost_USE_STATIC_LIBS ON)
@@ -70,3 +70,29 @@ target_include_directories(uartTest PRIVATE ${Boost_INCLUDE_DIRS} ${CMAKE_CURREN
 
 # 链接 Boost 库
 target_link_libraries(uartTest PRIVATE pthread ${Boost_LIBRARIES} async_network)
+
+#------------------------------------------------------------------------------------------------------------
+# 添加可执行文件和源文件
+file(GLOB SOURCES5 ${CMAKE_CURRENT_SOURCE_DIR}/CANTest.cpp)
+
+add_executable(canTest ${SOURCES5})
+target_compile_options(canTest PRIVATE -g)
+
+# 包含头文件路径
+target_include_directories(canTest PRIVATE ${Boost_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/src/)
+
+# 链接 Boost 库
+target_link_libraries(canTest PRIVATE pthread ${Boost_LIBRARIES} async_network)
+
+#------------------------------------------------------------------------------------------------------------
+# 添加可执行文件和源文件
+file(GLOB SOURCES5 ${CMAKE_CURRENT_SOURCE_DIR}/ModbusTcpClientTest.cpp)
+
+add_executable(modbusTcpClientTest ${SOURCES5})
+target_compile_options(modbusTcpClientTest PRIVATE -g)
+
+# 包含头文件路径
+target_include_directories(modbusTcpClientTest PRIVATE ${Boost_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/src/)
+
+# 链接 Boost 库
+target_link_libraries(modbusTcpClientTest PRIVATE pthread ${Boost_LIBRARIES} async_network)

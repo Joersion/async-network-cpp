@@ -13,7 +13,7 @@ namespace io {
         isClose_.store(false);
         cbWrite_ = std::bind(&SessionBase::doWrite, shared_from_this(), std::placeholders::_1, std::placeholders::_2);
         cbRead_ = std::bind(&SessionBase::doRead, shared_from_this(), std::placeholders::_1, std::placeholders::_2);
-        syncRecv(recvBuf_, IO_BUFFER_MAX_LEN, cbRead_);
+        asyncRecv(cbRead_);
         startTimer();
     }
 
@@ -29,7 +29,7 @@ namespace io {
                 return;
             }
         }
-        syncSend(data, cbWrite_);
+        asyncSend(data, cbWrite_);
     }
 
     void SessionBase::close() {
@@ -48,14 +48,18 @@ namespace io {
             if (isClose_) {
                 return;
             }
-            readHandle(recvBuf_, len, err);
-            syncRecv(recvBuf_, IO_BUFFER_MAX_LEN, cbRead_);
+            readHandle(len, err);
+            asyncRecv(cbRead_);
         } else {
             err = error.what();
+            // 程序结束释放资源，不需要回调
             if (error != boost::asio::error::operation_aborted) {
-                readHandle(recvBuf_, len, err);
+                readHandle(len, err);
             }
-            close();
+            // 遇到读到终止符,对端关闭,管道破裂需要关闭操作
+            if (error == boost::asio::error::eof || error == boost::asio::error::broken_pipe || error == boost::asio::error::shut_down) {
+                close();
+            }
         }
     }
 
@@ -76,13 +80,15 @@ namespace io {
                 }
             }
             writeHandle(len, err);
-            syncSend(data, cbWrite_);
+            asyncSend(data, cbWrite_);
         } else {
             err = error.what();
             if (error != boost::asio::error::operation_aborted) {
                 writeHandle(len, err);
             }
-            close();
+            if (error == boost::asio::error::eof || error == boost::asio::error::broken_pipe || error == boost::asio::error::shut_down) {
+                close();
+            }
         }
     }
 

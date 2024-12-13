@@ -17,10 +17,10 @@ namespace io {
         void close();
 
     protected:
-        virtual void syncRecv(char *buf, int len, std::function<void(const boost::system::error_code &error, size_t len)> cb) = 0;
-        virtual void syncSend(const std::string &msg, std::function<void(const boost::system::error_code &error, size_t len)> cb) = 0;
+        virtual void asyncRecv(std::function<void(const boost::system::error_code &error, size_t len)> cb) = 0;
+        virtual void asyncSend(const std::string &msg, std::function<void(const boost::system::error_code &error, size_t len)> cb) = 0;
         virtual void closeSession() = 0;
-        virtual void readHandle(const char *buf, size_t len, const std::string &error) = 0;
+        virtual void readHandle(int len, const std::string &error) = 0;
         virtual void writeHandle(const int len, const std::string &error) = 0;
         virtual void timerHandle() = 0;
 
@@ -31,7 +31,6 @@ namespace io {
         void startTimer();
 
     private:
-        char recvBuf_[IO_BUFFER_MAX_LEN];
         std::queue<std::string> sendBuf_;
         std::mutex sendLock_;
         std::atomic<bool> isClose_;

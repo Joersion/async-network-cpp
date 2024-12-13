@@ -34,15 +34,15 @@ namespace net::socket {
         }
     }
 
-    void Session::syncRecv(char *buf, int len, std::function<void(const boost::system::error_code &error, size_t len)> cb) {
-        socket_.async_read_some(boost::asio::buffer(buf, len), cb);
+    void Session::asyncRecv(std::function<void(const boost::system::error_code &error, size_t len)> cb) {
+        socket_.async_read_some(boost::asio::buffer(recvBuf_, IO_BUFFER_MAX_LEN), cb);
     }
 
-    void Session::readHandle(const char *buf, size_t len, const std::string &error) {
-        conn_->onRead(ip(), port(), buf, len, error);
+    void Session::readHandle(int len, const std::string &error) {
+        conn_->onRead(ip(), port(), recvBuf_, len, error);
     }
 
-    void Session::syncSend(const std::string &msg, std::function<void(const boost::system::error_code &error, size_t len)> cb) {
+    void Session::asyncSend(const std::string &msg, std::function<void(const boost::system::error_code &error, size_t len)> cb) {
         boost::asio::async_write(socket_, boost::asio::buffer(msg.data(), msg.size()), cb);
     }
 

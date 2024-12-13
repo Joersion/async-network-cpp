@@ -38,14 +38,15 @@ namespace net::socket {
         int port();
 
     protected:
-        virtual void syncRecv(char *buf, int len, std::function<void(const boost::system::error_code &error, size_t len)> cb) override;
-        virtual void syncSend(const std::string &msg, std::function<void(const boost::system::error_code &error, size_t len)> cb) override;
+        virtual void asyncRecv(std::function<void(const boost::system::error_code &error, size_t len)> cb) override;
+        virtual void asyncSend(const std::string &msg, std::function<void(const boost::system::error_code &error, size_t len)> cb) override;
         virtual void closeSession() override;
-        virtual void readHandle(const char *buf, size_t len, const std::string &error) override;
+        virtual void readHandle(int len, const std::string &error) override;
         virtual void writeHandle(const int len, const std::string &error) override;
         virtual void timerHandle() override;
 
     private:
+        char recvBuf_[IO_BUFFER_MAX_LEN];
         Connection *conn_;
         boost::asio::ip::tcp::socket socket_;
     };

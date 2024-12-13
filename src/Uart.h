@@ -38,14 +38,15 @@ namespace uart {
         int getBaud();
 
     protected:
-        virtual void syncRecv(char *buf, int len, std::function<void(const boost::system::error_code &error, size_t len)> cb) override;
-        virtual void syncSend(const std::string &msg, std::function<void(const boost::system::error_code &error, size_t len)> cb) override;
+        virtual void asyncRecv(std::function<void(const boost::system::error_code &error, size_t len)> cb) override;
+        virtual void asyncSend(const std::string &msg, std::function<void(const boost::system::error_code &error, size_t len)> cb) override;
         virtual void closeSession() override;
-        virtual void readHandle(const char *buf, size_t len, const std::string &error) override;
+        virtual void readHandle(int len, const std::string &error) override;
         virtual void writeHandle(const int len, const std::string &error) override;
         virtual void timerHandle() override;
 
     private:
+        char recvBuf_[IO_BUFFER_MAX_LEN];
         Connection *conn_;
         boost::asio::serial_port serialPort_;
         std::string portName_;
@@ -66,8 +67,8 @@ namespace uart {
         virtual void doClose(const std::string &portName, const std::string &error) override final;
 
     private:
-        std::shared_ptr<Session> session_;
         boost::asio::io_context &ioContext_;
+        std::shared_ptr<Session> session_;
         bool stop_;
     };
 };  // namespace uart

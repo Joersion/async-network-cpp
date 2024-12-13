@@ -32,15 +32,15 @@ namespace uart {
         return baud_;
     }
 
-    void Session::syncRecv(char *buf, int len, std::function<void(const boost::system::error_code &error, size_t len)> cb) {
-        serialPort_.async_read_some(boost::asio::buffer(buf, len), cb);
+    void Session::asyncRecv(std::function<void(const boost::system::error_code &error, size_t len)> cb) {
+        serialPort_.async_read_some(boost::asio::buffer(recvBuf_, IO_BUFFER_MAX_LEN), cb);
     }
 
-    void Session::readHandle(const char *buf, size_t len, const std::string &error) {
-        conn_->onRead(portName_, buf, len, error);
+    void Session::readHandle(int len, const std::string &error) {
+        conn_->onRead(portName_, recvBuf_, len, error);
     }
 
-    void Session::syncSend(const std::string &msg, std::function<void(const boost::system::error_code &error, size_t len)> cb) {
+    void Session::asyncSend(const std::string &msg, std::function<void(const boost::system::error_code &error, size_t len)> cb) {
         boost::asio::async_write(serialPort_, boost::asio::buffer(msg.data(), msg.size()), cb);
     }
 
@@ -60,8 +60,10 @@ namespace uart {
         conn_->onTimer(portName_);
     }
 
-    SerialPort::SerialPort(std::string portName, int baud, int timeout) : ioContext_(net::ConnectionPool::instance().getContext()), stop_(false) {
-        session_ = std::make_shared<Session>(this, portName, baud, ioContext_, timeout);
+    SerialPort::SerialPort(std::string portName, int baud, int timeout)
+        : ioContext_(net::ConnectionPool::instance().getContext()),
+          session_(std::make_shared<Session>(this, portName, baud, ioContext_, timeout)),
+          stop_(false) {
     }
 
     SerialPort::~SerialPort() {
