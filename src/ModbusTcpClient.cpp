@@ -4,7 +4,7 @@
 
 #include "Tool.h"
 
-namespace net::socket::modbus {
+namespace modbus::tcp {
     ModbusTcpClient::ModbusTcpClient(const std::string &ip, int port, int timeout) : TcpClient(ip, port, timeout) {
     }
 
@@ -22,44 +22,57 @@ namespace net::socket::modbus {
         unpacket(buf, len, resps);
         for (int i = 0; i < resps.size(); i++) {
             uint16_t uuid = Tool::ntohs2((char *)&resps[i].header.uuid);
-            uint8_t code = resps[i].funcCode;
-            data = std::string(resps[i].data.data(), resps[i].count);
-            if (code == 0x03 || code == 0x04 || code == 0x06 || code == 0x10) {
-                Tool::tolittle(data);
-            }
-            onRead(ip, port, uuid, data, error);
+            onRead(ip, port, uuid, resps[i].base.values, error);
         }
     }
 
-    void ModbusTcpClient::send(uint16_t uuid, uint8_t addrNo, uint8_t funcCode, uint16_t startAddr, uint16_t reqLen) {
-        Request request;
-        request.header.uuid = uuid;
-        request.header.protocolId = 0x0000;
-        request.header.len = 0x0006;
-        request.header.addrNo = addrNo;
-        request.funcCode = funcCode;
-        request.startAddr = startAddr;
-        request.quantity = reqLen;
+    bool ModbusTcpClient::send(uint16_t uuid, uint8_t addrNo, uint8_t funcCode, uint16_t startAddr, uint16_t value, const std::string &data) {
+        if (data.length() > 250) {
+            return false;
+        }
+        MbapHeader header;
+        header.uuid = uuid;
+        header.protocolId = 0x0000;
+        header.len = 0x0006 + data.length();
+        header.addrNo = addrNo;
+
         std::string reqData;
-        packet(request, reqData);
+        packet(header, funcCode, startAddr, value, data, reqData);
         TcpClient::send(reqData);
+        return true;
     }
 
-    void ModbusTcpClient::packet(const Request &req, std::string &reqData) {
-        char dataLenBuf[2], uuidBuf[2], protocolIdBuf[2], startAddrBuf[2], quantityBuf[2];
-        Tool::htons2(req.header.len, dataLenBuf);
-        Tool::htons2(req.header.uuid, uuidBuf);
-        Tool::htons2(req.header.protocolId, protocolIdBuf);
-        Tool::htons2(req.startAddr, startAddrBuf);
-        Tool::htons2(req.quantity, quantityBuf);
+    bool ModbusTcpClient::send(uint16_t uuid, uint8_t addrNo, uint8_t funcCode, uint16_t startAddr, uint16_t value,
+                               const std::vector<uint16_t> &data) {
+        std::string str;
+        char buf[2];
+        for (int i = 0; i < data.size(); i++) {
+            Tool::htons2(data[i], buf);
+            str.append(buf, 2);
+        }
+        Tool::tolittle(str);
+        return send(uuid, addrNo, funcCode, startAddr, value, str);
+    }
+
+    void ModbusTcpClient::packet(const MbapHeader &header, uint8_t funcCode, uint16_t startAddr, uint16_t reqLen, const std::string &data,
+                                 std::string &reqData) {
+        char dataLenBuf[2], uuidBuf[2], protocolIdBuf[2];
+        Tool::htons2(header.len, dataLenBuf);
+        Tool::htons2(header.uuid, uuidBuf);
+        Tool::htons2(header.protocolId, protocolIdBuf);
 
         reqData.append(uuidBuf, 2);
         reqData.append(protocolIdBuf, 2);
         reqData.append(dataLenBuf, 2);
-        reqData.append(1, req.header.addrNo);
-        reqData.append(1, req.funcCode);
-        reqData.append(startAddrBuf, 2);
-        reqData.append(quantityBuf, 2);
+        reqData.append(1, header.addrNo);
+        reqData.append(1, funcCode);
+
+        RequestBase reqBase;
+        reqBase.code = funcCode;
+        reqBase.startAddr = startAddr;
+        reqBase.quantity = reqLen;
+        reqBase.values = data;
+        Modbus::packet(reqBase, reqData);
     }
 
     void ModbusTcpClient::unpacket(const char *buf, int len, std::vector<Response> &resps) {
@@ -86,9 +99,14 @@ namespace net::socket::modbus {
                 data_.append(bufStr.substr(0, addlen));
                 bufStr.erase(0, addlen);
             }
-            Response *response = (Response *)data_.data();
-            resps.emplace_back(*response);
+            char *data = data_.data() + sizeof(MbapHeader);
+            ResponseBase respBase;
+            Modbus::unpack(*data, data, respBase);
+            Response resp;
+            resp.header = *header;
+            resp.base = respBase;
+            resps.emplace_back(resp);
             data_.clear();
         }
     }
-};  // namespace net::socket::modbus
+};  // namespace modbus

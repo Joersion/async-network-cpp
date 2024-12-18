@@ -3,7 +3,7 @@
 
 #include "../src/ModbusTcpClient.h"
 
-using namespace net::socket::modbus;
+using namespace modbus::tcp;
 
 class testClient : public ModbusTcpClient {
 public:
@@ -18,7 +18,7 @@ public:
             std::cout << "onRead error:" << error << std::endl;
             return;
         }
-        }
+    }
 
     virtual void onWrite(const std::string &ip, int port, int len, const std::string &error) override {
         if (!error.empty()) {

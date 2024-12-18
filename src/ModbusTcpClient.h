@@ -1,8 +1,9 @@
 #pragma once
 
+#include "Modbus.h"
 #include "TcpClient.h"
 
-namespace net::socket::modbus {
+namespace modbus::tcp {
     struct MbapHeader {
         // 事务ID
         uint16_t uuid;
@@ -16,25 +17,15 @@ namespace net::socket::modbus {
 
     struct Request {
         MbapHeader header;
-        // 功能码
-        uint8_t funcCode;
-        // 起始地址
-        uint16_t startAddr;
-        // 读取数量
-        uint16_t quantity;
+        ResponseBase base;
     };
 
     struct Response {
         MbapHeader header;
-        // 功能码
-        uint8_t funcCode;
-        // 响应字节数
-        uint8_t count;
-        // 响应数据
-        std::string data;
+        ResponseBase base;
     };
 
-    class ModbusTcpClient : public TcpClient {
+    class ModbusTcpClient : public net::socket::TcpClient {
     public:
         ModbusTcpClient(const std::string &ip, int port, int timeout = 0);
         ~ModbusTcpClient();
@@ -46,15 +37,15 @@ namespace net::socket::modbus {
         virtual void onRead(const std::string &ip, int port, const char *buf, size_t len, const std::string &error) override final;
 
     public:
-        // 重写发送接口
-        void send(uint16_t uuid, uint8_t addrNo, uint8_t funcCode, uint16_t startAddr, uint16_t reqLen);
+        bool send(uint16_t uuid, uint8_t addrNo, uint8_t funcCode, uint16_t startAddr, uint16_t value, const std::string &data = "");
+        bool send(uint16_t uuid, uint8_t addrNo, uint8_t funcCode, uint16_t startAddr, uint16_t value, const std::vector<uint16_t> &data);
 
     private:
-        void packet(const Request &req, std::string &reqData);
+        void packet(const MbapHeader &header, uint8_t funcCode, uint16_t startAddr, uint16_t reqLen, const std::string &data, std::string &reqData);
 
         void unpacket(const char *buf, int len, std::vector<Response> &resps);
 
     private:
         std::string data_;
     };
-};  // namespace net::socket
+};  // namespace modbus
