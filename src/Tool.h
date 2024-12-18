@@ -13,4 +13,6 @@ public:
     static short ntohs2(const char* net);
     // 大端数据转小端数据
     static void tolittle(std::string& data);
+    // modbus crc16
+    static uint16_t modbus_crc16(const std::string& data);
 };
