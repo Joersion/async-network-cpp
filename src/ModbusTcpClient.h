@@ -2,7 +2,7 @@
 
 #include "TcpClient.h"
 
-namespace net::socket::modbus {
+namespace modbus {
     struct MbapHeader {
         // 事务ID
         uint16_t uuid;
@@ -34,7 +34,7 @@ namespace net::socket::modbus {
         std::string data;
     };
 
-    class ModbusTcpClient : public TcpClient {
+    class ModbusTcpClient : public net::socket::TcpClient {
     public:
         ModbusTcpClient(const std::string &ip, int port, int timeout = 0);
         ~ModbusTcpClient();
@@ -46,15 +46,15 @@ namespace net::socket::modbus {
         virtual void onRead(const std::string &ip, int port, const char *buf, size_t len, const std::string &error) override final;
 
     public:
-        // 重写发送接口
-        void send(uint16_t uuid, uint8_t addrNo, uint8_t funcCode, uint16_t startAddr, uint16_t reqLen);
+        bool send(uint16_t uuid, uint8_t addrNo, uint8_t funcCode, uint16_t startAddr, uint16_t value, const std::string &data = "");
+        bool send(uint16_t uuid, uint8_t addrNo, uint8_t funcCode, uint16_t startAddr, uint16_t value, const std::vector<uint16_t> &data);
 
     private:
-        void packet(const Request &req, std::string &reqData);
+        void packet(const MbapHeader &header, uint8_t funcCode, uint16_t startAddr, uint16_t reqLen, const std::string &data, std::string &reqData);
 
         void unpacket(const char *buf, int len, std::vector<Response> &resps);
 
     private:
         std::string data_;
     };
-};  // namespace net::socket
+};  // namespace modbus

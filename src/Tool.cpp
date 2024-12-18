@@ -44,3 +44,17 @@ void Tool::tolittle(std::string& data) {
     }
     data = convertedData;
 }
+
+uint16_t Tool::modbus_crc16(const std::string& data) {
+    uint16_t crc = 0xFFFF;
+    for (size_t i = 0; i < data.size(); ++i) {
+        crc ^= static_cast<uint8_t>(data[i]);
+        for (size_t j = 8; j; --j) {
+            if (crc & 0x0001)
+                crc = (crc >> 1) ^ 0xA001;
+            else
+                crc >>= 1;
+        }
+    }
+    return crc;
+}
