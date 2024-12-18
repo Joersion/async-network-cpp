@@ -25,18 +25,7 @@ namespace net::socket::modbus {
             uint8_t code = resps[i].funcCode;
             data = std::string(resps[i].data.data(), resps[i].count);
             if (code == 0x03 || code == 0x04 || code == 0x06 || code == 0x10) {
-                std::string convertedData;
-                for (size_t i = 0; i < data.size(); i += 2) {
-                    if (i + 1 < data.size()) {
-                        // 获取当前2个字节
-                        uint16_t original = (static_cast<uint8_t>(data[i]) << 8) | static_cast<uint8_t>(data[i + 1]);
-                        // 将大端转为小端
-                        uint16_t converted = Tool::ntohs2(reinterpret_cast<char *>(&original));
-                        convertedData.push_back(static_cast<char>(converted & 0xFF));         // 低字节
-                        convertedData.push_back(static_cast<char>((converted >> 8) & 0xFF));  // 高字节
-                    }
-                }
-                data = convertedData;
+                Tool::tolittle(data);
             }
             onRead(ip, port, uuid, data, error);
         }
