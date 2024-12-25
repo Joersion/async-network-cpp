@@ -96,3 +96,16 @@ target_include_directories(modbusTcpClientTest PRIVATE ${Boost_INCLUDE_DIRS} ${C
 
 # 链接 Boost 库
 target_link_libraries(modbusTcpClientTest PRIVATE pthread ${Boost_LIBRARIES} async_network)
+
+#------------------------------------------------------------------------------------------------------------
+# 添加可执行文件和源文件
+file(GLOB SOURCES5 ${CMAKE_CURRENT_SOURCE_DIR}/ModbusRtuClientTest.cpp)
+
+add_executable(modbusRtuClientTest ${SOURCES5})
+target_compile_options(modbusRtuClientTest PRIVATE -g)
+
+# 包含头文件路径
+target_include_directories(modbusRtuClientTest PRIVATE ${Boost_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/src/)
+
+# 链接 Boost 库
+target_link_libraries(modbusRtuClientTest PRIVATE pthread ${Boost_LIBRARIES} async_network)

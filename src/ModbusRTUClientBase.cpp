@@ -1,4 +1,4 @@
-#include "ModbusRtuMaster.h"
+#include "ModbusRTUClientBase.h"
 
 #include <iostream>
 
@@ -6,13 +6,13 @@
 
 namespace modbus::rtu {
 
-    ModbusRTUClient::ModbusRTUClient(const std::string &portName, int baud, int timeout) : SerialPort(portName, baud, timeout) {
+    ModbusRTUClientBase::ModbusRTUClientBase(int timeout) : SerialPort(timeout) {
     }
 
-    ModbusRTUClient::~ModbusRTUClient() {
+    ModbusRTUClientBase::~ModbusRTUClientBase() {
     }
 
-    void ModbusRTUClient::onRead(const std::string &portName, const char *buf, size_t len, const std::string &error) {
+    void ModbusRTUClientBase::onRead(const std::string &portName, const char *buf, size_t len, const std::string &error) {
         std::string data;
         if (!error.empty()) {
             onRead(portName, 0, data, error);
@@ -27,7 +27,7 @@ namespace modbus::rtu {
         }
     }
 
-    bool ModbusRTUClient::send(uint16_t uuid, uint8_t funcCode, uint16_t startAddr, uint16_t value, const std::string &data) {
+    bool ModbusRTUClientBase::send(uint16_t uuid, uint8_t funcCode, uint16_t startAddr, uint16_t value, const std::string &data) {
         if (data.length() > 250) {
             return false;
         }
@@ -38,7 +38,7 @@ namespace modbus::rtu {
         return true;
     }
 
-    bool ModbusRTUClient::send(uint16_t uuid, uint8_t funcCode, uint16_t startAddr, uint16_t value, const std::vector<uint16_t> &data) {
+    bool ModbusRTUClientBase::send(uint16_t uuid, uint8_t funcCode, uint16_t startAddr, uint16_t value, const std::vector<uint16_t> &data) {
         std::string str;
         char buf[2];
         for (int i = 0; i < data.size(); i++) {
@@ -49,8 +49,8 @@ namespace modbus::rtu {
         return send(uuid, funcCode, startAddr, value, str);
     }
 
-    void ModbusRTUClient::packet(uint16_t uuid, uint8_t funcCode, uint16_t startAddr, uint16_t reqLen, const std::string &data,
-                                 std::string &reqData) {
+    void ModbusRTUClientBase::packet(uint16_t uuid, uint8_t funcCode, uint16_t startAddr, uint16_t reqLen, const std::string &data,
+                                     std::string &reqData) {
         char uuidBuf[2], crcBuf[2];
 
         Tool::htons2(uuid, uuidBuf);
@@ -67,7 +67,7 @@ namespace modbus::rtu {
         reqData.append(crcBuf, 2);
     }
 
-    void ModbusRTUClient::unpacket(const char *buf, int len, std::vector<Response> &resps) {
+    void ModbusRTUClientBase::unpacket(const char *buf, int len, std::vector<Response> &resps) {
         std::string bufStr(buf, len);
         while (bufStr.size() != 0) {
             if (data_.size() < 2) {

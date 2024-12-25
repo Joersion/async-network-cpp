@@ -3,19 +3,24 @@
 #include "ConnectionPool.h"
 
 namespace uart {
-
-    Session::Session(Connection *conn, const std::string &portName, int baud, boost::asio::io_context &ioContext, int timeout)
-        : SessionBase(ioContext, timeout), conn_(conn), serialPort_(boost::asio::make_strand(ioContext)), portName_(portName), baud_(baud) {
+    Session::Session(Connection *conn, boost::asio::io_context &ioContext, int timeout)
+        : SessionBase(ioContext, timeout), conn_(conn), serialPort_(boost::asio::make_strand(ioContext)) {
     }
 
-    bool Session::open(std::string &err) {
+    bool Session::open(std::string &err, const std::string &portName, const Config &config) {
         try {
-            serialPort_.open(portName_);
-            serialPort_.set_option(boost::asio::serial_port_base::baud_rate(baud_));
-            serialPort_.set_option(boost::asio::serial_port_base::character_size(8));
-            serialPort_.set_option(boost::asio::serial_port_base::stop_bits(boost::asio::serial_port_base::stop_bits::one));
-            serialPort_.set_option(boost::asio::serial_port_base::parity(boost::asio::serial_port_base::parity::none));
-            serialPort_.set_option(boost::asio::serial_port_base::flow_control(boost::asio::serial_port_base::flow_control::none));
+            if (serialPort_.is_open()) {
+                close();
+            }
+            portName_ = portName;
+            serialPort_.open(portName);
+            serialPort_.set_option(boost::asio::serial_port_base::baud_rate(config.baudRate));
+            serialPort_.set_option(boost::asio::serial_port_base::character_size(config.characterSize));
+            serialPort_.set_option(boost::asio::serial_port_base::stop_bits((boost::asio::serial_port_base::stop_bits::type)config.stopBits));
+            serialPort_.set_option(boost::asio::serial_port_base::parity((boost::asio::serial_port_base::parity::type)config.parity));
+            serialPort_.set_option(
+                boost::asio::serial_port_base::flow_control((boost::asio::serial_port_base::flow_control::type)config.flowControl));
+
             start();
             return true;
         } catch (const boost::system::system_error &e) {
@@ -28,8 +33,8 @@ namespace uart {
         return portName_;
     }
 
-    int Session::getBaud() {
-        return baud_;
+    Config Session::getConfig() {
+        return config_;
     }
 
     void Session::asyncRecv(std::function<void(const boost::system::error_code &error, size_t len)> cb) {
@@ -60,18 +65,16 @@ namespace uart {
         conn_->onTimer(portName_);
     }
 
-    SerialPort::SerialPort(std::string portName, int baud, int timeout)
-        : ioContext_(net::ConnectionPool::instance().getContext()),
-          session_(std::make_shared<Session>(this, portName, baud, ioContext_, timeout)),
-          stop_(false) {
+    SerialPort::SerialPort(int timeout)
+        : ioContext_(net::ConnectionPool::instance().getContext()), session_(std::make_shared<Session>(this, ioContext_, timeout)), stop_(false) {
     }
 
     SerialPort::~SerialPort() {
         stop_ = true;
     }
 
-    bool SerialPort::open(std::string &error) {
-        return session_->open(error);
+    bool SerialPort::open(std::string &err, const std::string &portName, const Config &config) {
+        return session_->open(err, portName, config);
     }
 
     void SerialPort::send(const std::string &data) {

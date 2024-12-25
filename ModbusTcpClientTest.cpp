@@ -1,13 +1,13 @@
 #include <iostream>
 #include <thread>
 
-#include "../src/ModbusTcpClient.h"
+#include "../src/ModbusTcpClientBase.h"
 
 using namespace modbus::tcp;
 
-class testClient : public ModbusTcpClient {
+class testClient : public ModbusTcpClientBase {
 public:
-    testClient(const std::string &ip, int port, int timeout = 0) : ModbusTcpClient(ip, port, timeout) {
+    testClient(const std::string &ip, int port, int timeout = 0) : ModbusTcpClientBase(ip, port, timeout) {
     }
     ~testClient() {
     }

@@ -1,17 +1,17 @@
-#include "ModbusTcpClient.h"
+#include "ModbusTcpClientBase.h"
 
 #include <iostream>
 
 #include "Tool.h"
 
 namespace modbus::tcp {
-    ModbusTcpClient::ModbusTcpClient(const std::string &ip, int port, int timeout) : TcpClient(ip, port, timeout) {
+    ModbusTcpClientBase::ModbusTcpClientBase(const std::string &ip, int port, int timeout) : TcpClient(ip, port, timeout) {
     }
 
-    ModbusTcpClient::~ModbusTcpClient() {
+    ModbusTcpClientBase::~ModbusTcpClientBase() {
     }
 
-    void ModbusTcpClient::onRead(const std::string &ip, int port, const char *buf, size_t len, const std::string &error) {
+    void ModbusTcpClientBase::onRead(const std::string &ip, int port, const char *buf, size_t len, const std::string &error) {
         std::string data;
         if (!error.empty()) {
             onRead(ip, port, 0, data, error);
@@ -26,7 +26,7 @@ namespace modbus::tcp {
         }
     }
 
-    bool ModbusTcpClient::send(uint16_t uuid, uint8_t addrNo, uint8_t funcCode, uint16_t startAddr, uint16_t value, const std::string &data) {
+    bool ModbusTcpClientBase::send(uint16_t uuid, uint8_t addrNo, uint8_t funcCode, uint16_t startAddr, uint16_t value, const std::string &data) {
         if (data.length() > 250) {
             return false;
         }
@@ -42,8 +42,8 @@ namespace modbus::tcp {
         return true;
     }
 
-    bool ModbusTcpClient::send(uint16_t uuid, uint8_t addrNo, uint8_t funcCode, uint16_t startAddr, uint16_t value,
-                               const std::vector<uint16_t> &data) {
+    bool ModbusTcpClientBase::send(uint16_t uuid, uint8_t addrNo, uint8_t funcCode, uint16_t startAddr, uint16_t value,
+                                   const std::vector<uint16_t> &data) {
         std::string str;
         char buf[2];
         for (int i = 0; i < data.size(); i++) {
@@ -54,8 +54,8 @@ namespace modbus::tcp {
         return send(uuid, addrNo, funcCode, startAddr, value, str);
     }
 
-    void ModbusTcpClient::packet(const MbapHeader &header, uint8_t funcCode, uint16_t startAddr, uint16_t reqLen, const std::string &data,
-                                 std::string &reqData) {
+    void ModbusTcpClientBase::packet(const MbapHeader &header, uint8_t funcCode, uint16_t startAddr, uint16_t reqLen, const std::string &data,
+                                     std::string &reqData) {
         char dataLenBuf[2], uuidBuf[2], protocolIdBuf[2];
         Tool::htons2(header.len, dataLenBuf);
         Tool::htons2(header.uuid, uuidBuf);
@@ -75,7 +75,7 @@ namespace modbus::tcp {
         Modbus::packet(reqBase, reqData);
     }
 
-    void ModbusTcpClient::unpacket(const char *buf, int len, std::vector<Response> &resps) {
+    void ModbusTcpClientBase::unpacket(const char *buf, int len, std::vector<Response> &resps) {
         std::string bufStr(buf, len);
         while (bufStr.size() != 0) {
             if (data_.size() < sizeof(MbapHeader)) {
@@ -109,4 +109,4 @@ namespace modbus::tcp {
             data_.clear();
         }
     }
-};  // namespace modbus
+};  // namespace modbus::tcp

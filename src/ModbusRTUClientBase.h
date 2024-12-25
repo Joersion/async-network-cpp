@@ -16,10 +16,10 @@ namespace modbus::rtu {
         uint16_t crc;
     };
 
-    class ModbusRTUClient : public uart::SerialPort {
+    class ModbusRTUClientBase : public uart::SerialPort {
     public:
-        ModbusRTUClient(const std::string &portName, int baud, int timeout = 0);
-        ~ModbusRTUClient();
+        ModbusRTUClientBase(int timeout = 0);
+        ~ModbusRTUClientBase();
 
     public:
         // 子类新提供一个虚函数

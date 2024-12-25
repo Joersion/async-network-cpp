@@ -4,6 +4,21 @@
 using namespace io;
 
 namespace uart {
+    // 停止位
+    enum class StopBits { one, onepointfive, two };
+    // 校验位
+    enum class Parity { none, odd, even };
+    // 控制流
+    enum class FlowControl { none, software, hardware };
+
+    struct Config {
+        int baudRate = 9600;
+        int characterSize = 8;
+        StopBits stopBits = StopBits::one;
+        Parity parity = Parity::none;
+        FlowControl flowControl = FlowControl::none;
+    };
+
     class Connection {
     public:
         Connection() {
@@ -28,14 +43,14 @@ namespace uart {
 
     class Session : public SessionBase {
     public:
-        Session(Connection *conn, const std::string &portName, int baud, boost::asio::io_context &ioContext, int timeout = 0);
+        Session(Connection *conn, boost::asio::io_context &ioContext, int timeout = 0);
         ~Session() {
         }
 
     public:
-        bool open(std::string &err);
+        bool open(std::string &err, const std::string &portName, const Config &config);
         std::string getName();
-        int getBaud();
+        Config getConfig();
 
     protected:
         virtual void asyncRecv(std::function<void(const boost::system::error_code &error, size_t len)> cb) override;
@@ -50,25 +65,26 @@ namespace uart {
         Connection *conn_;
         boost::asio::serial_port serialPort_;
         std::string portName_;
-        int baud_;
+        Config config_;
     };
 
     class SerialPort : public Connection {
     public:
-        SerialPort(std::string portName, int baud, int timeout = 0);
+        SerialPort(int timeout = 0);
         virtual ~SerialPort();
         SerialPort(const SerialPort &other) = delete;
         SerialPort &operator=(const SerialPort &other) = delete;
 
     public:
-        bool open(std::string &error);
+        bool open(std::string &err, const std::string &portName, const Config &config);
         void send(const std::string &data);
+        Config getConfig();
         // 重写关闭方法，防止子类继续重写
         virtual void doClose(const std::string &portName, const std::string &error) override final;
 
     private:
-        boost::asio::io_context &ioContext_;
         std::shared_ptr<Session> session_;
+        boost::asio::io_context &ioContext_;
         bool stop_;
     };
 };  // namespace uart

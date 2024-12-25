@@ -25,10 +25,10 @@ namespace modbus::tcp {
         ResponseBase base;
     };
 
-    class ModbusTcpClient : public net::socket::TcpClient {
+    class ModbusTcpClientBase : public net::socket::TcpClient {
     public:
-        ModbusTcpClient(const std::string &ip, int port, int timeout = 0);
-        ~ModbusTcpClient();
+        ModbusTcpClientBase(const std::string &ip, int port, int timeout = 0);
+        ~ModbusTcpClientBase();
 
     public:
         // 子类新提供一个虚函数

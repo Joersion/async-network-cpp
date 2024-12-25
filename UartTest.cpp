@@ -8,7 +8,7 @@ using namespace std;
 
 class SerialPortTest : public SerialPort {
 public:
-    SerialPortTest(const std::string &name, int baud, int timout = 0) : SerialPort(name, baud, timout) {
+    SerialPortTest(int timout = 0) : SerialPort(timout) {
     }
     ~SerialPortTest() = default;
 
@@ -56,9 +56,11 @@ int main(int argc, char *argv[]) {
         name += "9";
     }
 
-    SerialPortTest port(name, 9600, 2000);
+    SerialPortTest port(2000);
     std::string error;
-    if (!port.open(error)) {
+    uart::Config config;
+    config.baudRate = 9600;
+    if (!port.open(error, name, config)) {
         cout << "串口打开失败" << endl;
         return 0;
     }
