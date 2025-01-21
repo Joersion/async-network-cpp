@@ -61,7 +61,7 @@ namespace net::socket {
         }
     }
 
-    void TcpServer::send(const std::string &ip, int port, const std::string &msg) {
+    bool TcpServer::send(const std::string &ip, int port, const std::string &msg) {
         std::string key = ipPort(ip, port);
         std::shared_ptr<Session> session;
         {
@@ -72,8 +72,9 @@ namespace net::socket {
             }
         }
         if (session.get()) {
-            session->send(msg.data(), msg.length());
+            return session->send(msg.data(), msg.length());
         }
+        return false;
     }
 
     void TcpServer::close(const std::string &ip, int port) {

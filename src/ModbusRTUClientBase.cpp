@@ -34,8 +34,7 @@ namespace modbus::rtu {
 
         std::string reqData;
         packet(uuid, funcCode, startAddr, value, data, reqData);
-        SerialPort::send(reqData);
-        return true;
+        return SerialPort::send(reqData);
     }
 
     bool ModbusRTUClientBase::send(uint16_t uuid, uint8_t funcCode, uint16_t startAddr, uint16_t value, const std::vector<uint16_t> &data) {

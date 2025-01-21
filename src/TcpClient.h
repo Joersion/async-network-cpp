@@ -11,7 +11,7 @@ namespace net::socket {
         TcpClient& operator=(const TcpClient& other) = delete;
 
         void start(int reconncetTime = 0);
-        void send(const std::string& data);
+        bool send(const std::string& data);
         void close();
 
     public:

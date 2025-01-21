@@ -14,7 +14,7 @@ namespace net::socket {
 
     public:
         void start();
-        void send(const std::string& ip, int port, const std::string& msg);
+        bool send(const std::string& ip, int port, const std::string& msg);
         void close(const std::string& ip, int port);
         std::string ipPort(const std::string& ip, int port);
         // 重写关闭方法，防止子类继续重写

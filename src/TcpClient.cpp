@@ -24,10 +24,11 @@ namespace net::socket {
         resolver();
     }
 
-    void TcpClient::send(const std::string& data) {
+    bool TcpClient::send(const std::string& data) {
         if (session_) {
-            session_->send(data.data(), data.length());
+            return session_->send(data.data(), data.length());
         }
+        return false;
     }
 
     void TcpClient::close() {

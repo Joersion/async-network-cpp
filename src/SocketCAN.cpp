@@ -141,12 +141,13 @@ namespace can {
         return session_->open(error, canName);
     }
 
-    void CANTransceiver::send(const std::string &data, int canId) {
+    bool CANTransceiver::send(const std::string &data, int canId) {
         if (session_.get()) {
             Frame frame(type_);
             frame.setFrame(canId, data.c_str(), data.length());
-            session_->send((char *)frame.buf(), frame.len());
+            return session_->send((char *)frame.buf(), frame.len());
         }
+        return false;
     }
 
     void CANTransceiver::doClose(const std::string &canName, const std::string &error) {

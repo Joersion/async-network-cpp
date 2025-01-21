@@ -64,7 +64,7 @@ namespace can {
 
     public:
         bool open(std::string &error, const std::string &canName);
-        void send(const std::string &data, int canId);
+        bool send(const std::string &data, int canId);
         // 重写关闭方法，防止子类继续重写
         virtual void doClose(const std::string &canName, const std::string &error) override final;
 

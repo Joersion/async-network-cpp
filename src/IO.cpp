@@ -17,19 +17,20 @@ namespace io {
         startTimer();
     }
 
-    void SessionBase::send(const char *msg, size_t len) {
+    bool SessionBase::send(const char *msg, size_t len) {
         if (isClose_) {
-            return;
+            return false;
         }
         std::string data(msg, len);
         {
             std::lock_guard<std::mutex> lock(sendLock_);
             if (sendBuf_.size() > 0) {
                 sendBuf_.push(data);
-                return;
+                return false;
             }
         }
         asyncSend(data, cbWrite_);
+        return true;
     }
 
     void SessionBase::close() {

@@ -77,10 +77,11 @@ namespace uart {
         return session_->open(err, portName, config);
     }
 
-    void SerialPort::send(const std::string &data) {
+    bool SerialPort::send(const std::string &data) {
         if (session_.get()) {
-            session_->send(data.data(), data.length());
+            return session_->send(data.data(), data.length());
         }
+        return false;
     }
 
     void SerialPort::doClose(const std::string &portName, const std::string &error) {

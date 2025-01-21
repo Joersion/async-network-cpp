@@ -13,7 +13,7 @@ namespace io {
 
     public:
         void start();
-        void send(const char *msg, size_t len);
+        bool send(const char *msg, size_t len);
         void close();
 
     protected:

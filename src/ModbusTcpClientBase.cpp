@@ -38,8 +38,7 @@ namespace modbus::tcp {
 
         std::string reqData;
         packet(header, funcCode, startAddr, value, data, reqData);
-        TcpClient::send(reqData);
-        return true;
+        return TcpClient::send(reqData);
     }
 
     bool ModbusTcpClientBase::send(uint16_t uuid, uint8_t addrNo, uint8_t funcCode, uint16_t startAddr, uint16_t value,
