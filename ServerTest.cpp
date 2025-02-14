@@ -3,6 +3,7 @@
 
 #include "src/Socket.h"
 #include "src/TcpServer.h"
+#include "src/Tool.h"
 
 using namespace net::socket;
 
@@ -19,7 +20,7 @@ public:
             std::cout << "onRead error info:" << error << std::endl;
             return;
         }
-        std::cout << "收到来自客户端,Ip:" << ip << ",port:" << port << ",data:" << buf << std::endl;
+        std::cout << "收到来自客户端,Ip:" << ip << ",port:" << port << ",hexData:" << Tool::hex2String(buf, len) << ",data:" << buf << std::endl;
         std::string str(buf, len);
         std::string tmp = "OK!";
         tmp += str;

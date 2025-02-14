@@ -2,6 +2,7 @@
 #include <thread>
 
 #include "../src/ModbusRTUClientBase.h"
+#include "../src/Tool.h"
 
 using namespace modbus::rtu;
 
@@ -13,7 +14,7 @@ public:
     }
 
 public:
-    virtual void onRead(const std::string &portName, int uuid, const std::string &data, const std::string &error) override {
+    virtual void onRead(const std::string &portName, int uuid, const std::string &data, uint8_t errorcode, const std::string &error) override {
         if (!error.empty()) {
             std::cout << "onRead error:" << error << std::endl;
             return;
@@ -46,11 +47,16 @@ public:
 
     virtual void onTimer(const std::string &portName) override {
         std::cout << "onTimer,portName:" << portName << std::endl;
+        unsigned char slaveAddr = 0x01;     // 从站地址
+        unsigned char functionCode = 0x03;  // 功能码 (读取保持寄存器)
+        unsigned short startAddr = 0x0000;  // 起始地址
+        unsigned short numRegs = 0x0002;    // 读取2个寄存器
+        send(slaveAddr, functionCode, startAddr, numRegs);
     }
 };
 
 int main(int argc, char *argv[]) {
-    testClient cli(2000);
+    testClient cli(10000);
     std::string name = "/dev/ttyS";
     if (argc > 1 && !std::string(argv[1]).empty()) {
         name += argv[1];
@@ -65,6 +71,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
     std::cout << "程序开始,串口名:" << name << std::endl;
+
     while (1) {
         char ch = getchar();
         if (ch == 'q') {

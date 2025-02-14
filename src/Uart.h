@@ -83,8 +83,8 @@ namespace uart {
         virtual void doClose(const std::string &portName, const std::string &error) override final;
 
     private:
-        std::shared_ptr<Session> session_;
         boost::asio::io_context &ioContext_;
+        std::shared_ptr<Session> session_;
         bool stop_;
     };
 };  // namespace uart

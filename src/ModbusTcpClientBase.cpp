@@ -14,15 +14,16 @@ namespace modbus::tcp {
     void ModbusTcpClientBase::onRead(const std::string &ip, int port, const char *buf, size_t len, const std::string &error) {
         std::string data;
         if (!error.empty()) {
-            onRead(ip, port, 0, data, error);
-            data_.clear();
+            onRead(ip, port, 0, data, 0x00, error);
+            currentbuf_.clear();
+            readBuf_.clear();
             return;
         }
         std::vector<Response> resps;
         unpacket(buf, len, resps);
         for (int i = 0; i < resps.size(); i++) {
             uint16_t uuid = Tool::ntohs2((char *)&resps[i].header.uuid);
-            onRead(ip, port, uuid, resps[i].base.values, error);
+            onRead(ip, port, uuid, resps[i].base.values, resps[i].base.errorCode, error);
         }
     }
 
@@ -38,6 +39,7 @@ namespace modbus::tcp {
 
         std::string reqData;
         packet(header, funcCode, startAddr, value, data, reqData);
+        std::cout << Tool::hex2String(reqData.data(), reqData.length()) << std::endl;
         return TcpClient::send(reqData);
     }
 
@@ -75,37 +77,39 @@ namespace modbus::tcp {
     }
 
     void ModbusTcpClientBase::unpacket(const char *buf, int len, std::vector<Response> &resps) {
-        std::string bufStr(buf, len);
-        while (bufStr.size() != 0) {
-            if (data_.size() < sizeof(MbapHeader)) {
-                int addlen = sizeof(MbapHeader) - data_.size();
-                if (bufStr.size() < addlen) {
-                    data_.append(bufStr);
-                    return;
+        readBuf_ += std::string(buf, len);
+        while (readBuf_.size() != 0) {
+            if (currentbuf_.size() < 7) {
+                int addlen = 7 - currentbuf_.size();
+                if (readBuf_.size() < addlen) {
+                    currentbuf_.append(readBuf_);
+                    readBuf_.clear();
+                    continue;
                 }
-                data_.append(bufStr.substr(0, addlen));
-                bufStr.erase(0, addlen);
+                currentbuf_.append(readBuf_.substr(0, addlen));
+                readBuf_.erase(0, addlen);
             }
-            MbapHeader *header = (MbapHeader *)data_.data();
+            MbapHeader *header = (MbapHeader *)currentbuf_.data();
             uint16_t totalLen = Tool::ntohs2((char *)&header->len);
             std::cout << "unpacket.len:" << len << std::endl;
-            if (data_.size() < totalLen) {
-                int addlen = totalLen - data_.size();
-                if (bufStr.size() < addlen) {
-                    data_.append(bufStr);
-                    return;
+            if (currentbuf_.size() < totalLen) {
+                int addlen = totalLen - currentbuf_.size();
+                if (readBuf_.size() < addlen) {
+                    currentbuf_.append(readBuf_);
+                    readBuf_.clear();
+                    continue;
                 }
-                data_.append(bufStr.substr(0, addlen));
-                bufStr.erase(0, addlen);
+                currentbuf_.append(readBuf_.substr(0, addlen));
+                readBuf_.erase(0, addlen);
             }
-            char *data = data_.data() + sizeof(MbapHeader);
+            char *data = currentbuf_.data() + sizeof(MbapHeader);
             ResponseBase respBase;
             Modbus::unpack(*data, data, respBase);
             Response resp;
             resp.header = *header;
             resp.base = respBase;
             resps.emplace_back(resp);
-            data_.clear();
+            currentbuf_.clear();
         }
     }
 };  // namespace modbus::tcp

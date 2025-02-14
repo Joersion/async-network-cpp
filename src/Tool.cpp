@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#include <iomanip>
+
 void Tool::htonl2(unsigned long host, char* net) {
     for (int i = 0; i < 4; i++) {
         net[i] = (host >> (8 * (3 - i))) & 0xff;
@@ -18,7 +20,7 @@ long Tool::ntohl2(const char* net) {
 
 void Tool::htons2(unsigned short host, char* net) {
     for (int i = 0; i < 2; i++) {
-        net[i] = (host >> (8 * (1 - i))) & 0xff;
+        net[i] = (host >> (8 * (1 - i))) & 0xff;  // 正确转换
     }
 }
 
@@ -57,4 +59,15 @@ uint16_t Tool::modbus_crc16(const std::string& data) {
         }
     }
     return crc;
+}
+
+std::string Tool::hex2String(const char* bytes, size_t len) {
+    std::ostringstream oss;  // 用于拼接输出的流
+
+    for (int i = 0; i < len; ++i) {
+        // 每个字节以16进制输出
+        oss << std::setw(2) << std::setfill('0') << std::hex << std::uppercase << static_cast<int>(bytes[i] & 0xFF) << " ";
+    }
+
+    return oss.str();  // 返回拼接好的字符串
 }

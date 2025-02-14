@@ -32,7 +32,7 @@ namespace modbus::tcp {
 
     public:
         // 子类新提供一个虚函数
-        virtual void onRead(const std::string &ip, int port, int uuid, const std::string &data, const std::string &error) = 0;
+        virtual void onRead(const std::string &ip, int port, int uuid, const std::string &data, uint8_t errorResp, const std::string &error) = 0;
         // 结束原生父类的虚函数
         virtual void onRead(const std::string &ip, int port, const char *buf, size_t len, const std::string &error) override final;
 
@@ -46,6 +46,7 @@ namespace modbus::tcp {
         void unpacket(const char *buf, int len, std::vector<Response> &resps);
 
     private:
-        std::string data_;
+        std::string currentbuf_;
+        std::string readBuf_;
     };
-};  // namespace modbus
+};  // namespace modbus::tcp

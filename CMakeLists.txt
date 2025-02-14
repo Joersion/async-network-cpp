@@ -11,8 +11,8 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -g -Wall")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g -Wall")
 
 set(CMAKE_CXX_COMPILER "aarch64-linux-g++")
-# 设置 Boost 的路径
-set(BOOST_ROOT ~/work/boost/aarch64-energy)
+# # 设置 Boost 的路径
+set(BOOST_ROOT ~/work/boost/aarch64)
 
 #优先静态库
 set(Boost_USE_STATIC_LIBS ON)

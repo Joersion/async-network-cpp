@@ -37,14 +37,14 @@ namespace modbus {
         struct ReadResponse {
             uint8_t code;
             uint8_t quantity;
-            std::string values;
+            uint8_t *values;
         };
 
         // 写响应
         struct WriteResponse {
             uint8_t code;
-            uint16_t startAddr;
-            uint16_t value;
+            uint8_t startAddr[2];
+            uint8_t value[2];
         };
 
         // 错误响应 0x81-0xFF
@@ -59,5 +59,8 @@ namespace modbus {
         static void unpack(uint8_t code, char *data, ResponseBase &respData);
 
         static int dataSize(uint8_t code);
+
+        // -1:错误协议 0:读 1:写 2:错误
+        static int action(uint8_t code);
     };
 };  // namespace modbus

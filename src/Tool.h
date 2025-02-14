@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <string>
 
 class Tool {
@@ -15,4 +16,6 @@ public:
     static void tolittle(std::string& data);
     // modbus crc16
     static uint16_t modbus_crc16(const std::string& data);
+    // 转16进制
+    static std::string hex2String(const char* bytes, size_t len);
 };

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <thread>
 
+#include "src/Tool.h"
 #include "src/Uart.h"
 
 using namespace uart;
@@ -18,7 +19,7 @@ public:
         if (!error.empty()) {
             cout << "onRead,error:" << error << endl;
         }
-        cout << "串口收到数据,portName:" << portName << ",data:" << std::string(buf, len) << endl;
+        cout << "串口收到数据,portName:" << portName << ",data:" << Tool::hex2String(buf, len) << ",len:" << len << endl;
     }
     // 数据写入之后
     virtual void onWrite(const std::string &portName, const int len, const std::string &error) {

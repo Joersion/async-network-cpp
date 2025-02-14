@@ -13,7 +13,7 @@ public:
     }
 
 public:
-    virtual void onRead(const std::string &ip, int port, int uuid, const std::string &data, const std::string &error) override {
+    virtual void onRead(const std::string &ip, int port, int uuid, const std::string &data, uint8_t errorcode, const std::string &error) override {
         if (!error.empty()) {
             std::cout << "onRead error:" << error << std::endl;
             return;
@@ -46,6 +46,12 @@ public:
 
     virtual void onTimer(const std::string &ip, int port) override {
         std::cout << "onTimer,ip" << ip << ",port:" << port << std::endl;
+        unsigned char uuid = 0x01;          // 事务ID
+        unsigned char addrNo = 0x01;        // 从站地址
+        unsigned char functionCode = 0x03;  // 功能码 (读取保持寄存器)
+        unsigned short startAddr = 0x0000;  // 起始地址
+        unsigned short numRegs = 0x0002;    // 读取2个寄存器
+        send(uuid, 1, functionCode, startAddr, numRegs);
     }
 
     virtual void onResolver(const std::string &error) override {
