@@ -14,7 +14,8 @@ public:
     }
 
 public:
-    virtual void onRead(const std::string &portName, int uuid, const std::string &data, uint8_t errorcode, const std::string &error) override {
+    virtual void onRead(const std::string &src, const std::string &portName, int uuid, const std::string &data, uint8_t errorcode,
+                        const std::string &error) override {
         if (!error.empty()) {
             std::cout << "onRead error:" << error << std::endl;
             return;
@@ -66,6 +67,8 @@ int main(int argc, char *argv[]) {
     std::string error;
     uart::Config config;
     config.baudRate = 9600;
+    // 半双工485需要设置发送间隔
+    cli.setSendInterval(10);
     if (!cli.open(error, name, config)) {
         std::cout << "串口打开失败" << std::endl;
         return 0;

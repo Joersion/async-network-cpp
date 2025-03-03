@@ -53,7 +53,7 @@ public:
     // 定时器发生之后
     virtual void onTimer(const std::string &canName) {
         cout << "onTimer,canName:" << canName << endl;
-        int canId = 0x123;
+        int canId = 0x18FE02B1;
         char data[] = {0x01, 0x02, 0x03, 0x04};
         send(std::string(data, sizeof(data)), canId);
     }
