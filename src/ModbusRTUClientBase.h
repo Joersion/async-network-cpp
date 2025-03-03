@@ -14,6 +14,7 @@ namespace modbus::rtu {
         uint8_t uuid;
         ResponseBase base;
         uint16_t crc;
+        std::string src;
     };
 
     class ModbusRTUClientBase : public uart::SerialPort {
@@ -23,7 +24,8 @@ namespace modbus::rtu {
 
     public:
         // 子类新提供一个虚函数
-        virtual void onRead(const std::string &portName, int uuid, const std::string &data, uint8_t errorResp, const std::string &error) = 0;
+        virtual void onRead(const std::string &src, const std::string &portName, int uuid, const std::string &data, uint8_t errorResp,
+                            const std::string &error) = 0;
         // 结束原生父类的虚函数
         virtual void onRead(const std::string &portName, const char *buf, size_t len, const std::string &error) override final;
 

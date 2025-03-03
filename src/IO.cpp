@@ -6,7 +6,7 @@
 
 namespace io {
     SessionBase::SessionBase(boost::asio::io_context &ioContext, int timeout)
-        : timeout_(timeout), timer_(boost::asio::make_strand(ioContext), boost::posix_time::microseconds(timeout)) {
+        : timeout_(timeout), timer_(boost::asio::make_strand(ioContext), boost::posix_time::microseconds(timeout)), sendInterval_(0) {
     }
 
     void SessionBase::start() {
@@ -41,6 +41,11 @@ namespace io {
 
         std::lock_guard<std::mutex> lock(sendLock_);
         sendBuf_ = std::move(std::queue<std::string>());
+    }
+
+    bool SessionBase::setSendInterval(int interval) {
+        sendInterval_ = interval;
+        return true;
     }
 
     void SessionBase::doRead(const boost::system::error_code &error, size_t len) {
@@ -81,6 +86,9 @@ namespace io {
                 }
             }
             writeHandle(len, err);
+            if (sendInterval_ > 0) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(sendInterval_));
+            }
             asyncSend(data, cbWrite_);
         } else {
             err = error.what();

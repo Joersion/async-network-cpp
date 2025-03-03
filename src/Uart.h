@@ -70,7 +70,7 @@ namespace uart {
 
     class SerialPort : public Connection {
     public:
-        SerialPort(int timeout = 0);
+        SerialPort(int sendInterval = 0, int timeout = 0);
         virtual ~SerialPort();
         SerialPort(const SerialPort &other) = delete;
         SerialPort &operator=(const SerialPort &other) = delete;
@@ -78,7 +78,7 @@ namespace uart {
     public:
         bool open(std::string &err, const std::string &portName, const Config &config);
         bool send(const std::string &data);
-        Config getConfig();
+        bool setSendInterval(int interval);
         // 重写关闭方法，防止子类继续重写
         virtual void doClose(const std::string &portName, const std::string &error) override final;
 

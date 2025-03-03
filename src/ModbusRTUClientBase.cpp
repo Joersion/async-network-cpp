@@ -16,7 +16,7 @@ namespace modbus::rtu {
         std::cout << "modbusRTU readData:" << Tool::hex2String(buf, len) << std::endl;
         std::string data;
         if (!error.empty()) {
-            onRead(portName, 0, data, 0x00, error);
+            onRead("", portName, 0, data, 0x00, error);
             readBuf_.clear();
             currentbuf_.clear();
             return;
@@ -25,8 +25,8 @@ namespace modbus::rtu {
         unpacket(buf, len, resps);
         for (int i = 0; i < resps.size(); i++) {
             uint8_t uuid = resps[i].uuid;
-            std::cout << "modbusRTU onRead:" << Tool::hex2String(resps[i].base.values.data(), resps[i].base.values.length()) << std::endl;
-            onRead(portName, (int)uuid, resps[i].base.values, resps[i].base.errorCode, error);
+            std::cout << "modbusRTU onRead, data:" << Tool::hex2String(resps[i].base.values.data(), resps[i].base.values.length()) << std::endl;
+            onRead(resps[i].src, portName, (int)uuid, resps[i].base.values, resps[i].base.errorCode, error);
         }
     }
 
@@ -65,8 +65,8 @@ namespace modbus::rtu {
         reqBase.values = data;
         Modbus::packet(reqBase, reqData);
 
-        Tool::htons2(Tool::modbus_crc16(reqData), crcBuf);
-        reqData.append(crcBuf, 2);
+        uint16_t crc = Tool::modbus_crc16(reqData);
+        reqData.append((char *)&crc, sizeof(crc));
     }
 
     void ModbusRTUClientBase::unpacket(const char *buf, int len, std::vector<Response> &resps) {
@@ -87,7 +87,6 @@ namespace modbus::rtu {
             uint8_t code = currentbuf_[1];
             // 0：读 1:写 2：错误 -1:抛弃
             int action = Modbus::action(code);
-            std::cout << "code:" << (int)code << ",uuid:" << (int)uuid << std::endl;
             if (action == 0) {
                 // 说明读操作响应，需要再读一个字节，代表数据长度
                 if (currentbuf_.length() < 3) {
@@ -101,7 +100,6 @@ namespace modbus::rtu {
                     readBuf_.erase(0, addlen);
                 }
                 int dataLen = (int)currentbuf_[2];
-                std::cout << "dataLen:" << (int)dataLen << std::endl;
                 // 读取读数据响应和最后两个crc字节
                 if (currentbuf_.length() < dataLen + 5) {
                     int addlen = dataLen + 5 - currentbuf_.length();
@@ -114,7 +112,7 @@ namespace modbus::rtu {
                     readBuf_.erase(0, addlen);
                 }
                 uint16_t crc = Tool::modbus_crc16(std::string(currentbuf_.data(), currentbuf_.length() - 2));
-                if ((uint16_t)Tool::ntohs2(currentbuf_.data() + currentbuf_.length() - 2) != crc) {
+                if (currentbuf_.length() > 2 && *(uint16_t *)(currentbuf_.data() + currentbuf_.length() - 2) != crc) {
                     std::cout << "crc error ,local crc:" << std::hex << crc << ",remote crc:" << Tool::ntohs2(readBuf_.data() + dataLen)
                               << ",readLen:" << readBuf_.length() << std::endl;
 
@@ -129,14 +127,16 @@ namespace modbus::rtu {
                 resp.base.values = std::string(currentbuf_.data() + 3, dataLen);
                 resp.base.quantity = dataLen;
                 resp.crc = crc;
+                resp.src = currentbuf_;
+                std::cout << "modbusRTU unpacket:" << Tool::hex2String(currentbuf_.data(), currentbuf_.length()) << std::endl;
                 resps.emplace_back(resp);
                 currentbuf_.clear();
             } else if (action > 0) {
-                // 写响应需要再抓6个字节(起始地址2字节 + 值2字节（写入值或写入数量） +CRC 2字节 )
-                int needReadLen = 6;
-                // 错误响应需要再写3字节(错误码1字节 + CRC校验2字节)
+                // 写响应抓6个字节(起始地址2字节 + 值2字节（写入值或写入数量） +CRC 2字节 )
+                int needReadLen = 8;
+                // 错误响应5字节(错误码1字节 + CRC校验2字节)
                 if (action == 2) {
-                    needReadLen = 3;
+                    needReadLen = 5;
                 }
 
                 if (currentbuf_.length() < needReadLen) {
@@ -151,7 +151,7 @@ namespace modbus::rtu {
                 }
 
                 uint16_t crc = Tool::modbus_crc16(std::string(currentbuf_.data(), currentbuf_.length() - 2));
-                if ((uint16_t)Tool::ntohs2(currentbuf_.data() + currentbuf_.length() - 2) != crc) {
+                if (currentbuf_.length() > 2 && *(uint16_t *)(currentbuf_.data() + currentbuf_.length() - 2) != crc) {
                     std::cout << "crc error ,local crc:" << std::hex << crc
                               << ",remote crc:" << Tool::ntohs2(currentbuf_.data() + currentbuf_.length() - 2) << ",readLen:" << readBuf_.length()
                               << std::endl;
@@ -170,6 +170,8 @@ namespace modbus::rtu {
                 } else if (action == 2) {
                     resp.base.errorCode = currentbuf_[2];
                 }
+                resp.src = currentbuf_;
+                std::cout << "modbusRTU unpacket:" << Tool::hex2String(currentbuf_.data(), currentbuf_.length()) << std::endl;
                 resps.emplace_back(resp);
                 currentbuf_.clear();
             } else {

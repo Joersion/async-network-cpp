@@ -1,11 +1,13 @@
 #include "SocketCAN.h"
 
+#include <Tool.h>
 #include <linux/can.h>
 #include <linux/can/raw.h>
 #include <net/if.h>
 #include <sys/socket.h>
 
 #include <algorithm>
+#include <iostream>
 
 #include "ConnectionPool.h"
 
@@ -19,6 +21,9 @@ namespace can {
         void setFrame(int canId, const char *data, int len) {
             if (type_ == ProtocolType::CAN2A) {
                 frame_.can_id = canId;
+                if (len > 8) {
+                    len = 8;
+                }
             } else {
                 frame_.can_id = canId | CAN_EFF_FLAG;
             }

@@ -65,7 +65,7 @@ namespace uart {
         conn_->onTimer(portName_);
     }
 
-    SerialPort::SerialPort(int timeout)
+    SerialPort::SerialPort(int sendInterval, int timeout)
         : ioContext_(net::ConnectionPool::instance().getContext()), session_(std::make_shared<Session>(this, ioContext_, timeout)), stop_(false) {
     }
 
@@ -80,6 +80,13 @@ namespace uart {
     bool SerialPort::send(const std::string &data) {
         if (session_.get()) {
             return session_->send(data.data(), data.length());
+        }
+        return false;
+    }
+
+    bool SerialPort::setSendInterval(int interval) {
+        if (session_.get()) {
+            return session_->setSendInterval(interval);
         }
         return false;
     }
