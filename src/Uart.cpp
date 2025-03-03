@@ -66,7 +66,11 @@ namespace uart {
     }
 
     SerialPort::SerialPort(int sendInterval, int timeout)
-        : ioContext_(net::ConnectionPool::instance().getContext()), session_(std::make_shared<Session>(this, ioContext_, timeout)), stop_(false) {
+        : ioContext_(net::ConnectionPool::instance().getContext()),
+          session_(std::make_shared<Session>(this, ioContext_, timeout)),
+          stop_(false),
+          sendInterval_(0),
+          sendIntervalTimer_(boost::asio::make_strand(ioContext_), boost::posix_time::microseconds(sendInterval_.load())) {
     }
 
     SerialPort::~SerialPort() {
@@ -79,15 +83,19 @@ namespace uart {
 
     bool SerialPort::send(const std::string &data) {
         if (session_.get()) {
-            return session_->send(data.data(), data.length());
+            if (sendInterval_.load() == 0) {
+                return session_->send(data.data(), data.length());
+            }
+            std::lock_guard<std::mutex> lock(sendLock_);
+            sendBuf_.push(data);
+            return true;
         }
         return false;
     }
 
     bool SerialPort::setSendInterval(int interval) {
-        if (session_.get()) {
-            return session_->setSendInterval(interval);
-        }
+        sendInterval_.store(interval, std::memory_order_relaxed);
+        startSendTimer();
         return false;
     }
 
@@ -98,6 +106,26 @@ namespace uart {
         if (session_.get()) {
             session_.reset();
         }
+    }
+
+    void SerialPort::startSendTimer() {
+        sendIntervalTimer_.expires_from_now(boost::posix_time::milliseconds(sendInterval_.load()));
+        sendIntervalTimer_.async_wait(std::bind(&SerialPort::doSendTimer, this));
+    }
+
+    void SerialPort::doSendTimer() {
+        std::string data;
+        {
+            std::lock_guard<std::mutex> lock(sendLock_);
+            if (sendBuf_.size() > 0) {
+                data = sendBuf_.front();
+                sendBuf_.pop();
+            }
+        }
+        if (!data.empty()) {
+            session_->send(data.data(), data.length());
+        }
+        startSendTimer();
     }
 
 };  // namespace uart

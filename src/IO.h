@@ -15,7 +15,6 @@ namespace io {
         void start();
         bool send(const char *msg, size_t len);
         void close();
-        bool setSendInterval(int interval);
 
     protected:
         virtual void asyncRecv(std::function<void(const boost::system::error_code &error, size_t len)> cb) = 0;
@@ -39,7 +38,5 @@ namespace io {
         boost::asio::deadline_timer timer_;
         std::function<void(const boost::system::error_code &error, size_t len)> cbWrite_;
         std::function<void(const boost::system::error_code &error, size_t len)> cbRead_;
-        // 发送间隔
-        int sendInterval_;
     };
 };  // namespace io

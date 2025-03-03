@@ -83,8 +83,18 @@ namespace uart {
         virtual void doClose(const std::string &portName, const std::string &error) override final;
 
     private:
+        void startSendTimer();
+        void doSendTimer();
+
+    private:
         boost::asio::io_context &ioContext_;
         std::shared_ptr<Session> session_;
         bool stop_;
+
+        // 发送间隔
+        boost::asio::deadline_timer sendIntervalTimer_;
+        std::atomic<int> sendInterval_;
+        std::queue<std::string> sendBuf_;
+        std::mutex sendLock_;
     };
 };  // namespace uart
