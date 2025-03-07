@@ -46,8 +46,8 @@ public:
 
     virtual void onTimer(const std::string &ip, int port) override {
         std::cout << "onTimer,ip" << ip << ",port:" << port << std::endl;
-        unsigned char uuid = 0x01;          // 事务ID
-        unsigned char addrNo = 0x01;        // 从站地址
+        unsigned char uuid = 0x01;  // 事务ID
+        // unsigned char addrNo = 0x01;        // 从站地址
         unsigned char functionCode = 0x03;  // 功能码 (读取保持寄存器)
         unsigned short startAddr = 0x0000;  // 起始地址
         unsigned short numRegs = 0x0002;    // 读取2个寄存器

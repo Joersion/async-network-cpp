@@ -12,7 +12,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g -Wall")
 
 set(CMAKE_CXX_COMPILER "aarch64-linux-g++")
 # # 设置 Boost 的路径
-set(BOOST_ROOT ~/work/boost/aarch64)
+set(BOOST_ROOT ~/work/boost/aarch64-energy)
 
 #优先静态库
 set(Boost_USE_STATIC_LIBS ON)
@@ -99,13 +99,13 @@ target_link_libraries(modbusTcpClientTest PRIVATE pthread ${Boost_LIBRARIES} asy
 
 #------------------------------------------------------------------------------------------------------------
 # 添加可执行文件和源文件
-file(GLOB SOURCES5 ${CMAKE_CURRENT_SOURCE_DIR}/ModbusRtuClientTest.cpp)
+file(GLOB SOURCES5 ${CMAKE_CURRENT_SOURCE_DIR}/GPIOTest.cpp)
 
-add_executable(modbusRtuClientTest ${SOURCES5})
-target_compile_options(modbusRtuClientTest PRIVATE -g)
+add_executable(GPIOTest ${SOURCES5})
+target_compile_options(GPIOTest PRIVATE -g)
 
 # 包含头文件路径
-target_include_directories(modbusRtuClientTest PRIVATE ${Boost_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/src/)
+target_include_directories(GPIOTest PRIVATE ${Boost_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
 # 链接 Boost 库
-target_link_libraries(modbusRtuClientTest PRIVATE pthread ${Boost_LIBRARIES} async_network)
+target_link_libraries(GPIOTest PRIVATE pthread ${Boost_LIBRARIES} async_network)

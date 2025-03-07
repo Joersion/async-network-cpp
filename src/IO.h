@@ -17,6 +17,10 @@ namespace io {
         void close();
 
     protected:
+        // 错误关闭，有默认函数
+        virtual bool errorClose(const boost::system::error_code &error);
+
+    protected:
         virtual void asyncRecv(std::function<void(const boost::system::error_code &error, size_t len)> cb) = 0;
         virtual void asyncSend(const std::string &msg, std::function<void(const boost::system::error_code &error, size_t len)> cb) = 0;
         virtual void closeSession() = 0;
@@ -36,6 +40,8 @@ namespace io {
         std::atomic<bool> isClose_;
         int timeout_;
         boost::asio::deadline_timer timer_;
+
+    protected:
         std::function<void(const boost::system::error_code &error, size_t len)> cbWrite_;
         std::function<void(const boost::system::error_code &error, size_t len)> cbRead_;
     };

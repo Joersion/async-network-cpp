@@ -43,6 +43,15 @@ namespace io {
         sendBuf_ = std::move(std::queue<std::string>());
     }
 
+    bool SessionBase::errorClose(const boost::system::error_code &error) {
+        // 遇到读到终止符,对端关闭,管道破裂需要关闭操作
+        if (error == boost::asio::error::eof || error == boost::asio::error::broken_pipe || error == boost::asio::error::shut_down) {
+            close();
+            return false;
+        }
+        return true;
+    }
+
     void SessionBase::doRead(const boost::system::error_code &error, size_t len) {
         std::string err;
         if (!error) {
@@ -57,9 +66,8 @@ namespace io {
             if (error != boost::asio::error::operation_aborted) {
                 readHandle(len, err);
             }
-            // 遇到读到终止符,对端关闭,管道破裂需要关闭操作
-            if (error == boost::asio::error::eof || error == boost::asio::error::broken_pipe || error == boost::asio::error::shut_down) {
-                close();
+            if (errorClose(error)) {
+                asyncRecv(cbRead_);
             }
         }
     }
@@ -87,8 +95,8 @@ namespace io {
             if (error != boost::asio::error::operation_aborted) {
                 writeHandle(len, err);
             }
-            if (error == boost::asio::error::eof || error == boost::asio::error::broken_pipe || error == boost::asio::error::shut_down) {
-                close();
+            if (errorClose(error)) {
+                asyncSend(data, cbWrite_);
             }
         }
     }
