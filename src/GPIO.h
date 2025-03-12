@@ -53,15 +53,15 @@ namespace gpio {
     private:
         // void listenReadEven();
         void startAsyncRecv(const boost::system::error_code &error);
+        void setEdgeTriggered();
 
     private:
         char recvBuf_[IO_BUFFER_MAX_LEN];
         Connection *conn_;
         std::string portName_;
         IOType iotype_;
-        int listenfd_;
-        int readfd_;
-        boost::asio::posix::stream_descriptor listener_;
+        int fd_;
+        int epollFd_;
         boost::asio::posix::stream_descriptor reader_;
     };
 
