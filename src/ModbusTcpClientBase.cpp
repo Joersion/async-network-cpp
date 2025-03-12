@@ -19,6 +19,7 @@ namespace modbus::tcp {
             readBuf_.clear();
             return;
         }
+        // std::cout << "modbus-tcp onRead:" << Tool::hex2String(buf, len) << std::endl;
         std::vector<Response> resps;
         unpacket(buf, len, resps);
         for (int i = 0; i < resps.size(); i++) {
@@ -39,7 +40,7 @@ namespace modbus::tcp {
 
         std::string reqData;
         packet(header, funcCode, startAddr, value, data, reqData);
-        std::cout << Tool::hex2String(reqData.data(), reqData.length()) << std::endl;
+        // std::cout << "modbus-tcp Send:" << Tool::hex2String(reqData.data(), reqData.length()) << std::endl;
         return TcpClient::send(reqData);
     }
 
@@ -91,7 +92,7 @@ namespace modbus::tcp {
             }
             MbapHeader *header = (MbapHeader *)currentbuf_.data();
             uint16_t totalLen = Tool::ntohs2((char *)&header->len);
-            std::cout << "unpacket.len:" << len << std::endl;
+            // std::cout << "unpacket.len:" << len << std::endl;
             if (currentbuf_.size() < totalLen) {
                 int addlen = totalLen - currentbuf_.size();
                 if (readBuf_.size() < addlen) {
