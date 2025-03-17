@@ -1,10 +1,15 @@
 #pragma once
+#include <map>
+
 #include "IO.h"
 
 using namespace io;
 
 namespace gpio {
-    enum IOType { readOnly = 0, writeOnly, readWrite };
+    enum IOType { knowType = -1, readOnly = O_RDONLY, writeOnly = O_WRONLY, readWrite = O_WRONLY };
+
+    class Streams;
+
     class Connection {
     public:
         Connection() {
@@ -32,12 +37,12 @@ namespace gpio {
     class Session : public SessionBase {
     public:
         Session(Connection *conn, boost::asio::io_context &ioContext, int timeout = 0);
-        ~Session() {
-        }
+        ~Session();
 
     public:
-        bool open(std::string &err, const std::string &portName, IOType iotype);
-        std::string getName();
+        bool add(std::string &err, const std::string &portName, IOType iotype);
+        bool del(std::string &err, const std::string &portName);
+        IOType getStatus();
 
     protected:
         // virtual void listenReadEven(std::function<void(const boost::system::error_code &error, size_t len)> cb);
@@ -53,16 +58,17 @@ namespace gpio {
     private:
         // void listenReadEven();
         void startAsyncRecv(const boost::system::error_code &error);
-        void setEdgeTriggered();
+        void setEdgeTriggered(int fd);
+        void delEpollCtl(int fd);
 
     private:
         char recvBuf_[IO_BUFFER_MAX_LEN];
         Connection *conn_;
-        std::string portName_;
-        IOType iotype_;
-        int fd_;
         int epollFd_;
-        boost::asio::posix::stream_descriptor reader_;
+        boost::asio::posix::stream_descriptor listener_;
+        int value_;
+        boost::asio::io_context &ioContext_;
+        Streams *streams_;
     };
 
     class GPIO : public Connection {
@@ -73,7 +79,8 @@ namespace gpio {
         GPIO &operator=(const GPIO &other) = delete;
 
     public:
-        bool open(std::string &err, const std::string &fileName, IOType type = readWrite);
+        bool add(std::string &err, const std::string &fileName, IOType type = readOnly);
+        bool del(std::string &err, const std::string &fileName);
         bool send(const std::string &data);
         // 重写关闭方法，防止子类继续重写
         virtual void doClose(const std::string &portName, const std::string &error) override final;

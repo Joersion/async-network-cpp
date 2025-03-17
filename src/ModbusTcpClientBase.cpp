@@ -25,6 +25,7 @@ namespace modbus::tcp {
         for (int i = 0; i < resps.size(); i++) {
             uint16_t uuid = Tool::ntohs2((char *)&resps[i].header.uuid);
             onRead(ip, port, uuid, resps[i].base.values, resps[i].base.errorCode, error);
+            // std::cout << "uuid:" << uuid << ",values:" << Tool::hex2String(resps[i].base.values.data(), len) << std::endl;
         }
     }
 
