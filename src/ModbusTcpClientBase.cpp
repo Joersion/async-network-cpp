@@ -4,6 +4,8 @@
 
 #include "Tool.h"
 
+#define MBAP_LEN 7
+
 namespace modbus::tcp {
     ModbusTcpClientBase::ModbusTcpClientBase(const std::string &ip, int port, int timeout) : TcpClient(ip, port, timeout) {
     }
@@ -15,6 +17,7 @@ namespace modbus::tcp {
         std::string data;
         if (!error.empty()) {
             onRead(ip, port, 0, data, 0x00, error);
+            std::lock_guard<std::mutex> lock(mutex_);
             currentbuf_.clear();
             readBuf_.clear();
             return;
@@ -23,8 +26,9 @@ namespace modbus::tcp {
         std::vector<Response> resps;
         unpacket(buf, len, resps);
         for (int i = 0; i < resps.size(); i++) {
-            uint16_t uuid = Tool::ntohs2((char *)&resps[i].header.uuid);
+            int uuid = resps[i].header.uuid;
             onRead(ip, port, uuid, resps[i].base.values, resps[i].base.errorCode, error);
+            std::cout << "uuid:" << uuid << ",values:" << Tool::hex2String(resps[i].base.values.data(), resps[i].base.values.length()) << std::endl;
         }
     }
 
@@ -40,7 +44,7 @@ namespace modbus::tcp {
 
         std::string reqData;
         packet(header, funcCode, startAddr, value, data, reqData);
-        // std::cout << "modbus-tcp Send:" << Tool::hex2String(reqData.data(), reqData.length()) << std::endl;
+        std::cout << "modbus-tcp Send:" << Tool::hex2String(reqData.data(), reqData.length()) << std::endl;
         return TcpClient::send(reqData);
     }
 
@@ -78,10 +82,11 @@ namespace modbus::tcp {
     }
 
     void ModbusTcpClientBase::unpacket(const char *buf, int len, std::vector<Response> &resps) {
+        std::lock_guard<std::mutex> lock(mutex_);
         readBuf_ += std::string(buf, len);
         while (readBuf_.size() != 0) {
-            if (currentbuf_.size() < 7) {
-                int addlen = 7 - currentbuf_.size();
+            if (currentbuf_.size() < MBAP_LEN) {
+                int addlen = MBAP_LEN - currentbuf_.size();
                 if (readBuf_.size() < addlen) {
                     currentbuf_.append(readBuf_);
                     readBuf_.clear();
@@ -91,8 +96,14 @@ namespace modbus::tcp {
                 readBuf_.erase(0, addlen);
             }
             MbapHeader *header = (MbapHeader *)currentbuf_.data();
-            uint16_t totalLen = Tool::ntohs2((char *)&header->len);
-            // std::cout << "unpacket.len:" << len << std::endl;
+            int uuid = Tool::ntohs2((char *)&header->uuid);
+            int protocolId = Tool::ntohs2((char *)&header->protocolId);
+            int addrNo = Tool::ntohs2((char *)&header->addrNo);
+            // dataLen 有包含了MBAP一个字节的Modbus 设备地址,需要扣掉
+            int dataLen = Tool::ntohs2((char *)&header->len) - 1;
+            // 总长度 = 数据长度 + 头部 MBAP 长度
+            uint16_t totalLen = dataLen + MBAP_LEN;
+            // std::cout << "totalLen:" << totalLen << ",dataLen:" << dataLen << ",uuid:" << uuid << ",protocolId:" << protocolId << std::endl;
             if (currentbuf_.size() < totalLen) {
                 int addlen = totalLen - currentbuf_.size();
                 if (readBuf_.size() < addlen) {
@@ -103,11 +114,15 @@ namespace modbus::tcp {
                 currentbuf_.append(readBuf_.substr(0, addlen));
                 readBuf_.erase(0, addlen);
             }
-            char *data = currentbuf_.data() + sizeof(MbapHeader);
+            // std::cout << "currentbuf_:" << Tool::hex2String(currentbuf_.data(), currentbuf_.length()) << std::endl;
+            char *data = (char *)currentbuf_.data() + MBAP_LEN;
             ResponseBase respBase;
-            Modbus::unpack(*data, data, respBase);
+            Modbus::unpack(*data, data, dataLen, respBase);
             Response resp;
-            resp.header = *header;
+            resp.header.addrNo = addrNo;
+            resp.header.len = dataLen;
+            resp.header.protocolId = protocolId;
+            resp.header.uuid = uuid;
             resp.base = respBase;
             resps.emplace_back(resp);
             currentbuf_.clear();

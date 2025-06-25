@@ -2,6 +2,7 @@
 #include <thread>
 
 #include "../src/ModbusTcpClientBase.h"
+#include "src/Tool.h"
 
 using namespace modbus::tcp;
 
@@ -18,6 +19,7 @@ public:
             std::cout << "onRead error:" << error << std::endl;
             return;
         }
+        std::cout << "收到数据:" << Tool::hex2String(data.data(), data.length()) << std::endl;
     }
 
     virtual void onWrite(const std::string &ip, int port, int len, const std::string &error) override {
@@ -63,12 +65,16 @@ public:
 };
 
 int main(int argc, char *argv[]) {
-    testClient cli("127.0.0.1", 4137, 2000);
+    testClient cli("127.0.0.1", 4137, 100);
     cli.start(500);
     while (1) {
         char ch = getchar();
         if (ch == 'q') {
             exit(0);
+        } else if (ch == '1') {
+            cli.close();
+        } else if (ch == '2') {
+            cli.start(500);
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }

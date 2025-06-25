@@ -50,9 +50,9 @@ namespace net::socket {
         conn_->onWrite(ip(), port(), len, error);
     }
 
-    void Session::closeSession() {
+    void Session::closeSession(const std::string &err) {
         if (socket_.is_open()) {
-            conn_->doClose(ip(), port(), "");
+            conn_->doClose(ip(), port(), err);
             boost::system::error_code ignored_ec;
             socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
             socket_.close(ignored_ec);

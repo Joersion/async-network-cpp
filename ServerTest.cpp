@@ -23,9 +23,9 @@ public:
         std::cout << "收到来自客户端,Ip:" << ip << ",port:" << port << ",hexData:" << Tool::hex2String(buf, len) << ",data:" << buf << std::endl;
         std::string str(buf, len);
         std::string tmp = "OK!";
-        tmp += str;
-        std::cout << "发送数据给客户端,Ip:" << ip << ",port:" << port << ",data:" << tmp << std::endl;
-        send(ip, port, tmp);
+        // tmp += str;
+        std::cout << "发送数据给客户端,Ip:" << ip << ",port:" << port << ",data:" << Tool::hex2String(buf, len) << std::endl;
+        send(ip, port, str);
     }
 
     virtual void onWrite(const std::string &ip, int port, int len, const std::string &error) override {

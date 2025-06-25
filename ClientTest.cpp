@@ -71,6 +71,8 @@ int main(int argc, char *argv[]) {
         char ch = getchar();
         if (ch == 'q') {
             exit(0);
+        } else if (ch == '1') {
+            cli.close();
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }

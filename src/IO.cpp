@@ -1,6 +1,7 @@
 #include "IO.h"
 
 #include <boost/core/ignore_unused.hpp>
+#include <set>
 
 #include "ConnectionPool.h"
 
@@ -33,29 +34,41 @@ namespace io {
         return true;
     }
 
-    void SessionBase::close() {
+    void SessionBase::close(const std::string &err) {
         isClose_.store(true);
         timeout_ = 0;
         timer_.cancel();
-        closeSession();
+        closeSession(err);
 
         std::lock_guard<std::mutex> lock(sendLock_);
         sendBuf_ = std::move(std::queue<std::string>());
     }
 
     bool SessionBase::errorClose(const boost::system::error_code &error) {
-        // 遇到读到终止符,对端关闭,管道破裂需要关闭操作
-        if (error == boost::asio::error::eof || error == boost::asio::error::broken_pipe || error == boost::asio::error::shut_down) {
-            close();
-            return false;
+        // 无需关闭的错误列表（临时性错误，可恢复）
+        static const std::set<boost::system::error_code> errors = {
+            boost::asio::error::message_size,  // 数据包过大（若协议允许分片可不关闭）
+            boost::asio::error::try_again,     // 资源暂时不可用（如缓冲区满）
+            boost::asio::error::would_block,   // 非阻塞操作未就绪（EAGAIN）
+            boost::asio::error::interrupted,   // 系统调用被信号中断
+            boost::asio::error::in_progress    // 非阻塞连接进行中
+        };
+
+        // 检查是否为可恢复错误
+        if (errors.count(error)) {
+            return true;  // 不关闭连接
         }
-        return true;
+
+        // 其他情况视为致命错误，关闭连接
+        close(error.what());
+        return false;
     }
 
     void SessionBase::doRead(const boost::system::error_code &error, size_t len) {
         std::string err;
         if (!error) {
             if (isClose_) {
+                std::cout << "SessionBase::doRead isclose" << std::endl;
                 return;
             }
             readHandle(len, err);

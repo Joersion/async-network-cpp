@@ -10,7 +10,7 @@ namespace uart {
     bool Session::open(std::string &err, const std::string &portName, const Config &config) {
         try {
             if (serialPort_.is_open()) {
-                close();
+                close("");
             }
             portName_ = portName;
             serialPort_.open(portName);
@@ -53,9 +53,9 @@ namespace uart {
         conn_->onWrite(portName_, len, error);
     }
 
-    void Session::closeSession() {
+    void Session::closeSession(const std::string &err) {
         if (serialPort_.is_open()) {
-            conn_->doClose(portName_, "");
+            conn_->doClose(portName_, err);
             boost::system::error_code ignored_ec;
             serialPort_.close(ignored_ec);
         }
@@ -65,12 +65,12 @@ namespace uart {
         conn_->onTimer(portName_);
     }
 
-    SerialPort::SerialPort(int sendInterval, int timeout)
+    SerialPort::SerialPort(int timeout)
         : ioContext_(net::ConnectionPool::instance().getContext()),
           session_(std::make_shared<Session>(this, ioContext_, timeout)),
           stop_(false),
           sendInterval_(0),
-          sendIntervalTimer_(boost::asio::make_strand(ioContext_), boost::posix_time::microseconds(sendInterval_.load())) {
+          sendIntervalTimer_(boost::asio::make_strand(ioContext_)) {
     }
 
     SerialPort::~SerialPort() {
@@ -90,7 +90,7 @@ namespace uart {
             sendBuf_.push(data);
             return true;
         }
-        return false;
+        return session_->send(data.data(), data.length());
     }
 
     bool SerialPort::setSendInterval(int interval) {

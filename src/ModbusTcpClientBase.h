@@ -48,5 +48,6 @@ namespace modbus::tcp {
     private:
         std::string currentbuf_;
         std::string readBuf_;
+        std::mutex mutex_;
     };
 };  // namespace modbus::tcp

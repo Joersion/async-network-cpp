@@ -14,7 +14,7 @@ namespace io {
     public:
         void start();
         bool send(const char *msg, size_t len);
-        void close();
+        void close(const std::string& err);
 
     protected:
         // 错误关闭，有默认函数
@@ -23,7 +23,7 @@ namespace io {
     protected:
         virtual void asyncRecv(std::function<void(const boost::system::error_code &error, size_t len)> cb) = 0;
         virtual void asyncSend(const std::string &msg, std::function<void(const boost::system::error_code &error, size_t len)> cb) = 0;
-        virtual void closeSession() = 0;
+        virtual void closeSession(const std::string& err) = 0;
         virtual void readHandle(int len, const std::string &error) = 0;
         virtual void writeHandle(const int len, const std::string &error) = 0;
         virtual void timerHandle() = 0;

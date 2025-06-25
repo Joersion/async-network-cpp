@@ -3,25 +3,27 @@
 #include "ConnectionPool.h"
 
 namespace net::socket {
-    TcpClient::TcpClient(const std::string& ip, int port, int timeout)
+    TcpClient::TcpClient(const std::string& host, int port, int timeout)
         : ioContext_(net::ConnectionPool::instance().getContext()),
-          remote_(boost::asio::ip::address::from_string(ip), port),
+          remote_(boost::asio::ip::address::from_string(host), port),
           resolver_(boost::asio::make_strand(ioContext_)),
           timeout_(timeout),
           reconnectTimer_(boost::asio::make_strand(ioContext_)),
-          stop_(false) {
+          stop_(false),
+          host_(host),
+          port_(port) {
     }
 
     TcpClient::~TcpClient() {
         stop_ = true;
         if (session_.get()) {
-            session_->close();
+            session_->close("");
         }
     }
 
     void TcpClient::start(int reconncetTime) {
-        reconnectTimeout_ = reconncetTime;
-        resolver();
+        reconnectTimeout_.store(reconncetTime);
+        timerHandle();
     }
 
     bool TcpClient::send(const std::string& data) {
@@ -32,8 +34,9 @@ namespace net::socket {
     }
 
     void TcpClient::close() {
+        reconnectTimeout_.store(0);
         if (session_) {
-            session_->close();
+            session_->close("");
         }
     }
 
@@ -42,14 +45,14 @@ namespace net::socket {
     }
 
     void TcpClient::resolverHandle(const boost::system::error_code& error, boost::asio::ip::tcp::resolver::results_type endpoints) {
-        std::string err;
         if (!error) {
             syncConnect(endpoints);
         } else {
+            std::cout << error.what() << std::endl;
             startTimer();
-        }
-        if (error != boost::asio::error::operation_aborted) {
-            onResolver(err);
+            if (error != boost::asio::error::operation_aborted) {
+                onResolver(error.what());
+            }
         }
     }
 
@@ -74,6 +77,18 @@ namespace net::socket {
                                    std::bind(&TcpClient::ConnectHandle, this, session, std::placeholders::_1, std::placeholders::_2));
     }
 
+    void TcpClient::syncConnect() {
+        std::shared_ptr<Session> session = std::make_shared<Session>(this, ioContext_, timeout_);
+        if (!session.get()) {
+            return;
+        }
+        boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::make_address(host_), port_);
+        std::vector<boost::asio::ip::tcp::endpoint> endpoints;
+        endpoints.push_back(endpoint);
+        boost::asio::async_connect(session->getSocket(), endpoints,
+                                   std::bind(&TcpClient::ConnectHandle, this, session, std::placeholders::_1, std::placeholders::_2));
+    }
+
     void TcpClient::ConnectHandle(std::shared_ptr<Session> session, const boost::system::error_code& error,
                                   const boost::asio::ip::tcp::endpoint& endpoint) {
         std::string ip = session->ip();
@@ -87,7 +102,7 @@ namespace net::socket {
             session->start();
         } else {
             err = error.what();
-            session->close();
+            session->close(err);
         }
         if (error != boost::asio::error::operation_aborted) {
             onConnect(ip, port, err);
@@ -95,15 +110,25 @@ namespace net::socket {
     }
 
     void TcpClient::startTimer() {
-        if (reconnectTimeout_ > 0) {
+        if (reconnectTimeout_.load() > 0) {
             reconnectTimer_.cancel();
-            reconnectTimer_.expires_from_now(boost::posix_time::milliseconds(reconnectTimeout_));
+            reconnectTimer_.expires_from_now(boost::posix_time::milliseconds(reconnectTimeout_.load()));
             reconnectTimer_.async_wait(std::bind(&TcpClient::timerHandle, this));
         }
     }
 
     void TcpClient::timerHandle() {
-        resolver();
+        boost::system::error_code ec;
+        auto ip = boost::asio::ip::make_address(host_, ec);
+        if (!ec) {
+            syncConnect();
+        } else {
+            resolver();
+        }
+    }
+
+    void TcpClient::setReconncetTime(int reconnectTimeout) {
+        reconnectTimeout_.store(reconnectTimeout);
     }
 
 };  // namespace net::socket

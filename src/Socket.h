@@ -40,7 +40,7 @@ namespace net::socket {
     protected:
         virtual void asyncRecv(std::function<void(const boost::system::error_code &error, size_t len)> cb) override;
         virtual void asyncSend(const std::string &msg, std::function<void(const boost::system::error_code &error, size_t len)> cb) override;
-        virtual void closeSession() override;
+        virtual void closeSession(const std::string &err) override;
         virtual void readHandle(int len, const std::string &error) override;
         virtual void writeHandle(const int len, const std::string &error) override;
         virtual void timerHandle() override;

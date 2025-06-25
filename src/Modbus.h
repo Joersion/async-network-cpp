@@ -56,7 +56,7 @@ namespace modbus {
     public:
         static void packet(const RequestBase &req, std::string &reqData);
 
-        static void unpack(uint8_t code, char *data, ResponseBase &respData);
+        static void unpack(uint8_t code, char *data, int dataLen, ResponseBase &respData);
 
         static int dataSize(uint8_t code);
 

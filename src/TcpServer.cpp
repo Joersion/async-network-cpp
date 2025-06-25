@@ -20,7 +20,7 @@ namespace net::socket {
             }
         }
         for (auto session : tmps) {
-            session->close();
+            session->close("");
         }
     }
 
@@ -50,14 +50,13 @@ namespace net::socket {
         if (!error) {
             addSession(session);
             session->start();
-            onConnect(ip, port, err);
             accept();
         } else {
             err = error.what();
-            if (error != boost::asio::error::operation_aborted) {
-                onConnect(ip, port, err);
-            }
-            session->close();
+            session->close(err);
+        }
+        if (error && error != boost::asio::error::operation_aborted) {
+            onConnect(ip, port, err);
         }
     }
 
@@ -88,7 +87,7 @@ namespace net::socket {
             }
         }
         if (session.get()) {
-            session->close();
+            session->close("");
         }
     }
 

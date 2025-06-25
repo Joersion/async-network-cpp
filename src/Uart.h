@@ -55,7 +55,7 @@ namespace uart {
     protected:
         virtual void asyncRecv(std::function<void(const boost::system::error_code &error, size_t len)> cb) override;
         virtual void asyncSend(const std::string &msg, std::function<void(const boost::system::error_code &error, size_t len)> cb) override;
-        virtual void closeSession() override;
+        virtual void closeSession(const std::string &err) override;
         virtual void readHandle(int len, const std::string &error) override;
         virtual void writeHandle(const int len, const std::string &error) override;
         virtual void timerHandle() override;
@@ -70,7 +70,7 @@ namespace uart {
 
     class SerialPort : public Connection {
     public:
-        SerialPort(int sendInterval = 0, int timeout = 0);
+        SerialPort(int timeout = 0);
         virtual ~SerialPort();
         SerialPort(const SerialPort &other) = delete;
         SerialPort &operator=(const SerialPort &other) = delete;

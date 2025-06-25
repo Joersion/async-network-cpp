@@ -119,9 +119,9 @@ namespace can {
         conn_->onWrite(getName(), len, error);
     }
 
-    void Session::closeSession() {
+    void Session::closeSession(const std::string &err) {
         if (socket_.is_open()) {
-            conn_->doClose(getName(), "");
+            conn_->doClose(getName(), err);
             boost::system::error_code ignored_ec;
             socket_.close(ignored_ec);
         }

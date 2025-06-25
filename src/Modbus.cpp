@@ -1,5 +1,7 @@
 #include "Modbus.h"
 
+#include <iostream>
+
 #include "Tool.h"
 
 namespace modbus {
@@ -15,35 +17,19 @@ namespace modbus {
         }
     }
 
-    void Modbus::unpack(uint8_t code, char *data, ResponseBase &respData) {
+    void Modbus::unpack(uint8_t code, char *data, int dataLen, ResponseBase &respData) {
+        // std::cout << ",code:" << Tool::hex2String(data, dataLen) << std::endl;
         int opt = action(code);
         if (opt == 0) {
-            int len = *(data + 1);
-            respData.values = std::string(data + 2, len);
+            int valueLen = *(data + 1);
+            // std::cout << "valueLen:" << valueLen << std::endl;
+            respData.values = std::string(data + 2, valueLen);
         } else if (opt == 1) {
             respData.value = Tool::ntohs2(data + 1);
-            respData.values = std::string(data + 1, 4);
+            respData.values = std::string(data + 1, dataLen - 1);
         } else if (opt == 2) {
             respData.errorCode = *(data + 1);
         }
-        // int size = dataSize(code);
-        // if (size == sizeof(WriteResponse)) {
-        //     WriteResponse *resp = (WriteResponse *)data;
-        //     respData.code = resp->code;
-        //     respData.startAddr = Tool::ntohs2((char *)&resp->startAddr);
-        //     respData.value = Tool::ntohs2((char *)&resp->value);
-        //     respData.values = std::string((char *)&resp->value, 2);
-        // } else if (size == sizeof(ErrorResponse)) {
-        //     ErrorResponse *resp = (ErrorResponse *)data;
-        //     respData.code = resp->code;
-        //     respData.errorCode = resp->errorCode;
-        // } else {
-        //     ReadResponse *resp = (ReadResponse *)data;
-        //     respData.code = resp->code;
-        //     respData.quantity = resp->quantity;
-        //     std::string data = std::string((char *)resp->values, resp->quantity);
-        //     respData.values = data;
-        // }
     }
 
     int Modbus::dataSize(uint8_t code) {
